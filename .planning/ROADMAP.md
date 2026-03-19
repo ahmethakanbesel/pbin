@@ -28,7 +28,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The binary starts, applies all pending goose migrations automatically, and serves a health endpoint without error
   3. Config values (port, max upload size, storage path, Basic Auth credentials) load from a TOML file with environment variable overrides
   4. The slug generator produces cryptographically random, URL-safe identifiers with no collisions under repeated calls
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Go module init, config loading (koanf/v2 + TOML + env), slug generator (crypto/rand)
+- [ ] 01-02-PLAN.md — SQLite two-pool WAL setup + goose migrations + full schema + LocalFS filestore backend
+- [ ] 01-03-PLAN.md — Domain entities with constructor validation, repository interfaces, health endpoint, main.go binary wiring
 
 ### Phase 2: File Sharing
 **Goal**: Users can upload files, receive shareable links with configurable expiry, download files via direct URL, protect shares with passwords, mark files as one-time download, and get embed codes for images.
@@ -76,7 +81,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/3 | Not started | - |
 | 2. File Sharing | 0/TBD | Not started | - |
 | 3. Buckets and Paste | 0/TBD | Not started | - |
 | 4. API, Web UI, and Delivery | 0/TBD | Not started | - |
