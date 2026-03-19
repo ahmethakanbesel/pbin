@@ -8,7 +8,7 @@ import (
 )
 
 func TestNew_ValidExpiry(t *testing.T) {
-	f, err := file.New("abcdef", "test.txt", "text/plain", "1h", 100, "", false)
+	f, err := file.New("abcdef", "test.txt", "text/plain", "1h", "secret123", 100, "", false)
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -21,7 +21,7 @@ func TestNew_ValidExpiry(t *testing.T) {
 }
 
 func TestNew_InvalidExpiry(t *testing.T) {
-	_, err := file.New("abcdef", "test.txt", "text/plain", "2h", 100, "", false)
+	_, err := file.New("abcdef", "test.txt", "text/plain", "2h", "secret123", 100, "", false)
 	if err == nil {
 		t.Fatal("expected ErrInvalidExpiry, got nil")
 	}
@@ -31,7 +31,7 @@ func TestNew_InvalidExpiry(t *testing.T) {
 }
 
 func TestNew_EmptySlug(t *testing.T) {
-	_, err := file.New("", "test.txt", "text/plain", "1h", 100, "", false)
+	_, err := file.New("", "test.txt", "text/plain", "1h", "secret123", 100, "", false)
 	if err == nil {
 		t.Fatal("expected ErrEmptySlug, got nil")
 	}
