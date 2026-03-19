@@ -10,7 +10,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### File Sharing
 
 - [x] **FILE-01**: User can upload a file and receive a shareable link
-- [ ] **FILE-02**: User can download a file via direct URL (curl-friendly)
+- [x] **FILE-02**: User can download a file via direct URL (curl-friendly)
 - [x] **FILE-03**: User can set expiry on upload (10min, 1h, 6h, 1d, 7d, 30d, 90d, 1y, never)
 - [x] **FILE-04**: User receives a deletion token on upload and can delete the file with it
 - [x] **FILE-05**: User can password-protect a file share
@@ -84,7 +84,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FILE-01 | Phase 2 | Complete |
-| FILE-02 | Phase 2 | Pending |
+| FILE-02 | Phase 2 | Complete |
 | FILE-03 | Phase 2 | Complete |
 | FILE-04 | Phase 2 | Complete |
 | FILE-05 | Phase 2 | Complete |

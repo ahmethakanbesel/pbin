@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-file-sharing-01-PLAN.md
-last_updated: "2026-03-19T18:07:30.945Z"
+stopped_at: Completed 02-file-sharing-02-PLAN.md
+last_updated: "2026-03-19T21:12:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 ## Current Position
 
 Phase: 02 (file-sharing) — EXECUTING
-Plan: 1 of 4
+Plan: 2 of 4
 
 ## Performance Metrics
 
@@ -73,7 +73,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: ExpiryDuration panics on invalid input — callers must validate via New() first; panic = programming error
 - [Phase 01-foundation]: main.go is wire-only — config, DB, filestore, handlers, server; no business logic in entrypoint
 - [Phase 02-file-sharing]: Bytes-first upload order: filestore.Write before repo.Create; best-effort store.Delete rollback on DB failure
-- [Phase 02-file-sharing]: Read-time expiry enforcement deferred to Plan 02 when SQLite repo populates ExpiresAt on File entity
+- [Phase 02-file-sharing]: ExpiresAt is a read-time field on File entity set only by the repository, not by New() constructor
+- [Phase 02-file-sharing]: Read-time expiry enforced in Service.Get() immediately after GetBySlug, before password check
+- [Phase 02-file-sharing]: MarkDownloaded uses atomic UPDATE WHERE downloaded_at IS NULL + RowsAffected — prevents TOCTOU race
 - [Phase 02-file-sharing]: No SVG in SupportedImageMIMETypes — XSS risk (SVG can contain script tags)
 
 ### Pending Todos
@@ -87,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T18:07:30.942Z
-Stopped at: Completed 02-file-sharing-01-PLAN.md
+Last session: 2026-03-19T21:12:00.000Z
+Stopped at: Completed 02-file-sharing-02-PLAN.md
 Resume file: None
