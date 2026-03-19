@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-api-web-ui-and-delivery-01-PLAN.md
-last_updated: "2026-03-19T21:00:05.146Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-19T21:01:09.078Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 17
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -57,6 +57,7 @@ Plan: 2 of 4
 | Phase 03-buckets-and-paste P04 | 2min | 1 tasks | 2 files |
 | Phase 03-buckets-and-paste P06 | 10min | 2 tasks | 2 files |
 | Phase 04-api-web-ui-and-delivery P01 | 2min | 2 tasks | 2 files |
+| Phase 04-api-web-ui-and-delivery P02 | 3min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,9 @@ Recent decisions affecting current work:
 - [Phase 04-api-web-ui-and-delivery]: file.File uses Slug as on-disk storage key (no StorageKey field) — cleanup uses f.Slug for store.Delete
 - [Phase 04-api-web-ui-and-delivery]: Cleanup worker defines local repository interfaces to avoid import cycles and keep worker independently testable
 - [Phase 04-api-web-ui-and-delivery]: Stop() closes stop channel and blocks on done channel for synchronous shutdown guarantee
+- [Phase 04-api-web-ui-and-delivery]: UIHandler has no service dependencies — static HTML rendering only; all API calls handled by inline JS fetch in browser
+- [Phase 04-api-web-ui-and-delivery]: Pico CSS classless variant (pico.classless.min.css) used so semantic HTML elements styled without class attributes
+- [Phase 04-api-web-ui-and-delivery]: connect-src 'self' in CSP required on all three UI handlers for JS fetch calls to /api/* endpoints
 
 ### Pending Todos
 
@@ -118,6 +122,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T21:00:05.143Z
-Stopped at: Completed 04-api-web-ui-and-delivery-01-PLAN.md
+Last session: 2026-03-19T21:01:09.075Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
