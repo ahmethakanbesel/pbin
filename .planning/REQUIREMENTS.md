@@ -21,8 +21,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Transfer Buckets
 
 - [x] **BUCK-01**: User can upload multiple files to a single bucket and receive a shareable link
-- [ ] **BUCK-02**: User can set expiry on a bucket (same presets as file sharing)
-- [ ] **BUCK-03**: User can download all files in a bucket as a ZIP bundle
+- [x] **BUCK-02**: User can set expiry on a bucket (same presets as file sharing)
+- [x] **BUCK-03**: User can download all files in a bucket as a ZIP bundle
 - [x] **BUCK-04**: User can password-protect a transfer bucket
 - [x] **BUCK-05**: User can mark a bucket as one-time download (auto-deletes after first download)
 
@@ -92,8 +92,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILE-07 | Phase 2 | Complete |
 | FILE-08 | Phase 2 | Complete |
 | BUCK-01 | Phase 3 | Complete |
-| BUCK-02 | Phase 3 | Pending |
-| BUCK-03 | Phase 3 | Pending |
+| BUCK-02 | Phase 3 | Complete |
+| BUCK-03 | Phase 3 | Complete |
 | BUCK-04 | Phase 3 | Complete |
 | BUCK-05 | Phase 3 | Complete |
 | PASTE-01 | Phase 3 | Complete |
