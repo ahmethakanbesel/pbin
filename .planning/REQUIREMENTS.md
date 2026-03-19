@@ -15,8 +15,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FILE-04**: User receives a deletion token on upload and can delete the file with it
 - [x] **FILE-05**: User can password-protect a file share
 - [x] **FILE-06**: User can mark a file as one-time download (auto-deletes after first download)
-- [ ] **FILE-07**: User can get a direct embed link for validated image files (extension + magic byte validation)
-- [ ] **FILE-08**: User is shown ready-to-copy HTML, BBCode, and Markdown embed codes for image uploads
+- [x] **FILE-07**: User can get a direct embed link for validated image files (extension + magic byte validation)
+- [x] **FILE-08**: User is shown ready-to-copy HTML, BBCode, and Markdown embed codes for image uploads
 
 ### Transfer Buckets
 
@@ -89,8 +89,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILE-04 | Phase 2 | Complete |
 | FILE-05 | Phase 2 | Complete |
 | FILE-06 | Phase 2 | Complete |
-| FILE-07 | Phase 2 | Pending |
-| FILE-08 | Phase 2 | Pending |
+| FILE-07 | Phase 2 | Complete |
+| FILE-08 | Phase 2 | Complete |
 | BUCK-01 | Phase 3 | Pending |
 | BUCK-02 | Phase 3 | Pending |
 | BUCK-03 | Phase 3 | Pending |

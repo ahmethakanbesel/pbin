@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-file-sharing-02-PLAN.md
-last_updated: "2026-03-19T21:12:00.000Z"
+stopped_at: Completed 02-file-sharing-03-PLAN.md
+last_updated: "2026-03-19T18:20:12.561Z"
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -48,6 +48,7 @@ Plan: 2 of 4
 *Updated after each plan completion*
 | Phase 01-foundation P01 | 12 | 3 tasks | 6 files |
 | Phase 02-file-sharing P01 | 3 | 3 tasks | 3 files |
+| Phase 02-file-sharing P03 | 12 | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,7 @@ Recent decisions affecting current work:
 - [Phase 02-file-sharing]: Read-time expiry enforced in Service.Get() immediately after GetBySlug, before password check
 - [Phase 02-file-sharing]: MarkDownloaded uses atomic UPDATE WHERE downloaded_at IS NULL + RowsAffected — prevents TOCTOU race
 - [Phase 02-file-sharing]: No SVG in SupportedImageMIMETypes — XSS risk (SVG can contain script tags)
+- [Phase 02-file-sharing]: FileHandler accepts FileService interface (not *file.Service) for mock injection in tests; concrete *file.Service satisfies it at main.go wiring site
 
 ### Pending Todos
 
@@ -89,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T21:12:00.000Z
-Stopped at: Completed 02-file-sharing-02-PLAN.md
+Last session: 2026-03-19T18:20:12.545Z
+Stopped at: Completed 02-file-sharing-03-PLAN.md
 Resume file: None
