@@ -15,18 +15,18 @@ Users can share files, transfer file bundles, and paste text through a single se
 - ✓ SQLite backend using a CGO-free library — Validated in Phase 1: Foundation
 - ✓ Single binary distribution — Validated in Phase 1: Foundation
 - ✓ Domain-driven design, idiomatic Go — Validated in Phase 1: Foundation
+- ✓ File sharing with shareable links and configurable expiry — Validated in Phase 2: File Sharing
+- ✓ Fixed expiry presets (10min, 1h, 6h, 1d, 7d, 30d, 90d, 1y, never) — Validated in Phase 2: File Sharing
+- ✓ Configurable max upload size — Validated in Phase 2: File Sharing
 
 ### Active
 
-- [ ] File sharing with shareable links and configurable expiry
 - [ ] Multi-file transfer buckets with password protection and one-time download support
 - [ ] Pastebin with syntax highlighting and expiry
 - [ ] Embedded web UI served from the binary (no separate frontend server)
 - [ ] REST API for all operations
 - [ ] Optional basic auth for instance-level access control
-- [ ] Fixed expiry presets (10min, 1h, 6h, 1d, 7d, 30d, 90d, 1y, never)
 - [ ] ZIP bundle download for transfer buckets
-- [ ] Configurable max upload size
 - [ ] One-use pastes (auto-delete after first view)
 
 ### Out of Scope
@@ -70,4 +70,4 @@ The goal is to unify these three capabilities into a single Go binary backed by 
 | goose embedded migrations | Schema versioning from day one, runs at startup | ✓ Good |
 
 ---
-*Last updated: 2026-03-19 after Phase 1: Foundation complete*
+*Last updated: 2026-03-19 after Phase 2: File Sharing complete*
