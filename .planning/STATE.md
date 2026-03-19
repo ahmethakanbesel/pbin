@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-19T21:01:09.078Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-03-19T21:04:52.393Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -58,6 +58,7 @@ Plan: 2 of 4
 | Phase 03-buckets-and-paste P06 | 10min | 2 tasks | 2 files |
 | Phase 04-api-web-ui-and-delivery P01 | 2min | 2 tasks | 2 files |
 | Phase 04-api-web-ui-and-delivery P02 | 3min | 1 tasks | 1 files |
+| Phase 04-api-web-ui-and-delivery P03 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,8 @@ Recent decisions affecting current work:
 - [Phase 04-api-web-ui-and-delivery]: UIHandler has no service dependencies — static HTML rendering only; all API calls handled by inline JS fetch in browser
 - [Phase 04-api-web-ui-and-delivery]: Pico CSS classless variant (pico.classless.min.css) used so semantic HTML elements styled without class attributes
 - [Phase 04-api-web-ui-and-delivery]: connect-src 'self' in CSP required on all three UI handlers for JS fetch calls to /api/* endpoints
+- [Phase 04-api-web-ui-and-delivery]: Auth gates form pages (GET /, GET /paste, GET /bucket) as well as API write endpoints — all wrapped in middleware.BasicAuth per CONTEXT.md
+- [Phase 04-api-web-ui-and-delivery]: cleanupWorker.Stop() placed before srv.Shutdown in graceful shutdown to allow in-flight sweep completion
 
 ### Pending Todos
 
@@ -122,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T21:01:09.075Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-03-19T21:04:52.390Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None

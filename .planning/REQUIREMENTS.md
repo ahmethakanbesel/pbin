@@ -36,11 +36,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: All operations available via REST API with JSON responses
+- [x] **INFRA-01**: All operations available via REST API with JSON responses
 - [x] **INFRA-02**: Embedded web UI served from the binary (upload forms, share pages, paste editor)
 - [x] **INFRA-03**: Optional instance-level Basic Auth gating write endpoints
 - [x] **INFRA-04**: Background worker automatically cleans up expired files, buckets, and pastes
-- [ ] **INFRA-05**: Admin can configure max upload size
+- [x] **INFRA-05**: Admin can configure max upload size
 - [x] **INFRA-06**: Application runs as a single binary with SQLite (CGO-free), zero external dependencies
 
 ## v2 Requirements
@@ -101,11 +101,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PASTE-03 | Phase 3 | Complete |
 | PASTE-04 | Phase 3 | Complete |
 | PASTE-05 | Phase 3 | Complete |
-| INFRA-01 | Phase 4 | Pending |
+| INFRA-01 | Phase 4 | Complete |
 | INFRA-02 | Phase 4 | Complete |
 | INFRA-03 | Phase 4 | Complete |
 | INFRA-04 | Phase 4 | Complete |
-| INFRA-05 | Phase 4 | Pending |
+| INFRA-05 | Phase 4 | Complete |
 | INFRA-06 | Phase 1 | Complete |
 
 **Coverage:**
