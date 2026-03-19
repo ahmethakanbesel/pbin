@@ -23,6 +23,30 @@ var validExpiries = map[string]time.Duration{
 	"never": 0,
 }
 
+// SupportedImageMIMETypes lists MIME types eligible for inline serving and embed codes.
+// SVG is intentionally excluded (XSS risk — SVG can contain <script> tags).
+var SupportedImageMIMETypes = []string{
+	"image/png",
+	"image/jpeg",
+	"image/gif",
+	"image/webp",
+	"image/bmp",
+}
+
+// isImageMIME is a set for O(1) lookup.
+var isImageMIME = func() map[string]bool {
+	m := make(map[string]bool, len(SupportedImageMIMETypes))
+	for _, t := range SupportedImageMIMETypes {
+		m[t] = true
+	}
+	return m
+}()
+
+// IsImage reports whether mimeType is a supported inline-servable image type.
+func IsImage(mimeType string) bool {
+	return isImageMIME[mimeType]
+}
+
 // File is the core domain entity for a single uploaded file.
 type File struct {
 	Slug         string
@@ -32,10 +56,11 @@ type File struct {
 	PasswordHash string // bcrypt hash if password-protected; empty otherwise
 	OneUse       bool
 	Expiry       string // preset string e.g. "1d"
+	DeleteSecret string // random slug stored in DB; sent to uploader for deletion
 }
 
 // New validates and constructs a File. Slug and expiry are required.
-func New(slug, filename, mimeType, expiry string, size int64, passwordHash string, oneUse bool) (File, error) {
+func New(slug, filename, mimeType, expiry, deleteSecret string, size int64, passwordHash string, oneUse bool) (File, error) {
 	if slug == "" {
 		return File{}, ErrEmptySlug
 	}
@@ -50,6 +75,7 @@ func New(slug, filename, mimeType, expiry string, size int64, passwordHash strin
 		PasswordHash: passwordHash,
 		OneUse:       oneUse,
 		Expiry:       expiry,
+		DeleteSecret: deleteSecret,
 	}, nil
 }
 
