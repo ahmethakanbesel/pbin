@@ -10,6 +10,14 @@ var (
 	ErrEmptySlug     = errors.New("bucket: slug must not be empty")
 )
 
+var (
+	ErrNotFound        = errors.New("bucket: not found")
+	ErrExpired         = errors.New("bucket: expired")
+	ErrAlreadyConsumed = errors.New("bucket: one-use bucket already consumed")
+	ErrWrongPassword   = errors.New("bucket: wrong password")
+	ErrBadDeleteSecret = errors.New("bucket: invalid delete secret")
+)
+
 var validExpiries = map[string]time.Duration{
 	"10m":   10 * time.Minute,
 	"1h":    time.Hour,
@@ -28,6 +36,8 @@ type Bucket struct {
 	PasswordHash string
 	OneUse       bool
 	Expiry       string
+	DeleteSecret string
+	ExpiresAt    *time.Time
 	Files        []BucketFile
 }
 
@@ -43,14 +53,20 @@ type BucketFile struct {
 }
 
 // New validates and constructs a Bucket.
-func New(slug, passwordHash, expiry string, oneUse bool) (Bucket, error) {
+func New(slug, deleteSecret, passwordHash, expiry string, oneUse bool) (Bucket, error) {
 	if slug == "" {
 		return Bucket{}, ErrEmptySlug
 	}
 	if _, ok := validExpiries[expiry]; !ok {
 		return Bucket{}, ErrInvalidExpiry
 	}
-	return Bucket{Slug: slug, PasswordHash: passwordHash, OneUse: oneUse, Expiry: expiry}, nil
+	return Bucket{
+		Slug:         slug,
+		DeleteSecret: deleteSecret,
+		PasswordHash: passwordHash,
+		OneUse:       oneUse,
+		Expiry:       expiry,
+	}, nil
 }
 
 // ExpiryDuration converts expiry preset to time.Duration (0 = never).
