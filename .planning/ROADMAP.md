@@ -97,5 +97,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-19 |
 | 2. File Sharing | 4/4 | Complete   | 2026-03-19 |
-| 3. Buckets and Paste | 1/6 | In Progress|  |
+| 3. Buckets and Paste | 2/6 | In Progress|  |
 | 4. API, Web UI, and Delivery | 0/TBD | Not started | - |

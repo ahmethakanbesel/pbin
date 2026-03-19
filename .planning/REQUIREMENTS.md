@@ -29,8 +29,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Pastebin
 
 - [x] **PASTE-01**: User can create a text paste with optional title and receive a shareable link
-- [ ] **PASTE-02**: User can view a paste with syntax highlighting (language selectable)
-- [ ] **PASTE-03**: User can access raw paste content via `/raw/{id}` endpoint
+- [x] **PASTE-02**: User can view a paste with syntax highlighting (language selectable)
+- [x] **PASTE-03**: User can access raw paste content via `/raw/{id}` endpoint
 - [x] **PASTE-04**: User can set expiry on a paste (same presets)
 - [x] **PASTE-05**: User can mark a paste as one-use (auto-deletes after first view)
 
@@ -97,8 +97,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BUCK-04 | Phase 3 | Complete |
 | BUCK-05 | Phase 3 | Complete |
 | PASTE-01 | Phase 3 | Complete |
-| PASTE-02 | Phase 3 | Pending |
-| PASTE-03 | Phase 3 | Pending |
+| PASTE-02 | Phase 3 | Complete |
+| PASTE-03 | Phase 3 | Complete |
 | PASTE-04 | Phase 3 | Complete |
 | PASTE-05 | Phase 3 | Complete |
 | INFRA-01 | Phase 4 | Pending |

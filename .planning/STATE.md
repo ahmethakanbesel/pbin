@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-19T20:15:43.161Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-03-19T20:19:15.439Z"
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 13
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -51,6 +51,7 @@ Plan: 1 of 6
 | Phase 02-file-sharing P03 | 12 | 3 tasks | 2 files |
 | Phase 02-file-sharing P04 | 13min | 2 tasks | 2 files |
 | Phase 03-buckets-and-paste P01 | 1min | 1 tasks | 1 files |
+| Phase 03-buckets-and-paste P03 | 103s | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 02-file-sharing]: securityHeaders() must be called in every handler including health — health handler was missing it (auto-fixed in 02-04)
 - [Phase 03-buckets-and-paste]: Each ALTER TABLE statement uses its own goose StatementBegin/End block — goose requires one statement per block
 - [Phase 03-buckets-and-paste]: Down migration uses SELECT 1 placeholder — intentionally irreversible, mirrors 002 pattern for SQLite compatibility
+- [Phase 03-buckets-and-paste]: Paste.ExpiresAt is read-time field on Paste entity populated only by the repository (mirrors File pattern)
+- [Phase 03-buckets-and-paste]: DeleteSecret set by service after New() constructor — constructor signature unchanged
 
 ### Pending Todos
 
@@ -97,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T20:15:43.155Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-19T20:19:15.436Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
