@@ -30,7 +30,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **PASTE-01**: User can create a text paste with optional title and receive a shareable link
 - [x] **PASTE-02**: User can view a paste with syntax highlighting (language selectable)
-- [x] **PASTE-03**: User can access raw paste content via `/raw/{id}` endpoint
+- [x] **PASTE-03**: User can access raw paste content via `/{id}/raw` endpoint
 - [x] **PASTE-04**: User can set expiry on a paste (same presets)
 - [x] **PASTE-05**: User can mark a paste as one-use (auto-deletes after first view)
 
