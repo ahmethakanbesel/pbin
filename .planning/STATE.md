@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-02-PLAN.md
+stopped_at: Completed 01-03-PLAN.md
 last_updated: "2026-03-19T17:20:00Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 
 ## Current Position
 
-Phase: 01 (foundation) — EXECUTING
-Plan: 2 of 3
+Phase: 01 (foundation) — COMPLETE
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -67,6 +67,10 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: goose.SetBaseFS(embed.FS) + goose.Up in Open() — migrations run automatically at startup
 - [Phase 01-foundation]: LocalFS keys must be ^[a-zA-Z0-9]+$ — path traversal prevention at key validation layer
 - [Phase 01-foundation]: Atomic file write via os.CreateTemp + os.Rename — prevents partial writes visible to readers
+- [Phase 01-foundation]: Repository interfaces in domain packages (file.Repository not storage.FileRepository) — prevents import cycles
+- [Phase 01-foundation]: Expiry preset validation in New() constructor — only 9 allowed values, invalid is a typed error
+- [Phase 01-foundation]: ExpiryDuration panics on invalid input — callers must validate via New() first; panic = programming error
+- [Phase 01-foundation]: main.go is wire-only — config, DB, filestore, handlers, server; no business logic in entrypoint
 
 ### Pending Todos
 
@@ -80,5 +84,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-19T17:20:00Z
-Stopped at: Completed 01-02-PLAN.md
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
