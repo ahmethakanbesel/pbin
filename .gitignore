@@ -1,0 +1,12 @@
+# Build output
+/pbin
+/pbin-*
+
+# Runtime data (uploads, database)
+/data/
+
+# Test binaries
+/tmp/pbin-*
+
+# macOS metadata
+.DS_Store
