@@ -13,7 +13,7 @@ pbin is built bottom-up: the foundation establishes the Go module, SQLite with W
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Go module, SQLite/WAL, migrations, slug generation, config, local file storage (completed 2026-03-19)
-- [ ] **Phase 2: File Sharing** - Upload, download, expiry, deletion tokens, password protection, one-use, image embed links
+- [x] **Phase 2: File Sharing** - Upload, download, expiry, deletion tokens, password protection, one-use, image embed links (completed 2026-03-19)
 - [ ] **Phase 3: Buckets and Paste** - Multi-file transfer buckets with ZIP download; pastebin with syntax highlighting and one-use
 - [ ] **Phase 4: API, Web UI, and Delivery** - Finalized REST API, embedded web UI, Basic Auth, expiry cleanup worker, single-binary build
 
@@ -88,6 +88,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-19 |
-| 2. File Sharing | 2/4 | In Progress|  |
+| 2. File Sharing | 4/4 | Complete   | 2026-03-19 |
 | 3. Buckets and Paste | 0/TBD | Not started | - |
 | 4. API, Web UI, and Delivery | 0/TBD | Not started | - |

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 02-file-sharing-03-PLAN.md
-last_updated: "2026-03-19T18:20:12.561Z"
+stopped_at: Completed 02-file-sharing-04-PLAN.md
+last_updated: "2026-03-19T18:35:56.928Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -49,6 +49,7 @@ Plan: 2 of 4
 | Phase 01-foundation P01 | 12 | 3 tasks | 6 files |
 | Phase 02-file-sharing P01 | 3 | 3 tasks | 3 files |
 | Phase 02-file-sharing P03 | 12 | 3 tasks | 2 files |
+| Phase 02-file-sharing P04 | 13min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 02-file-sharing]: MarkDownloaded uses atomic UPDATE WHERE downloaded_at IS NULL + RowsAffected — prevents TOCTOU race
 - [Phase 02-file-sharing]: No SVG in SupportedImageMIMETypes — XSS risk (SVG can contain script tags)
 - [Phase 02-file-sharing]: FileHandler accepts FileService interface (not *file.Service) for mock injection in tests; concrete *file.Service satisfies it at main.go wiring site
+- [Phase 02-file-sharing]: GET /{slug}/info registered before GET /{slug} in mux — Go 1.22 stdlib routing requires more-specific patterns first
+- [Phase 02-file-sharing]: securityHeaders() must be called in every handler including health — health handler was missing it (auto-fixed in 02-04)
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T18:20:12.545Z
-Stopped at: Completed 02-file-sharing-03-PLAN.md
+Last session: 2026-03-19T18:35:56.925Z
+Stopped at: Completed 02-file-sharing-04-PLAN.md
 Resume file: None
