@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -81,9 +82,9 @@ func main() {
 	pasteHandler := handler.NewPasteHandler(pasteSvc)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health", handler.Health)
 
-	// Upload: dispatch on ?type=bucket
+	// Fixed routes that do not conflict with the GET / catch-all.
+	mux.HandleFunc("GET /health", handler.Health)
 	mux.HandleFunc("POST /api/upload", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("type") == "bucket" {
 			bucketHandler.Upload(w, r)
@@ -91,53 +92,112 @@ func main() {
 			fileHandler.Upload(w, r)
 		}
 	})
-
-	// Paste creation
 	mux.HandleFunc("POST /api/paste", pasteHandler.Create)
 
-	// More-specific patterns before the wildcard (Go 1.22 requires this)
-	mux.HandleFunc("GET /{slug}/info", fileHandler.Info)
-	mux.HandleFunc("GET /{slug}/zip", bucketHandler.DownloadZIP)
-	mux.HandleFunc("GET /{slug}/file/{storageKey}", bucketHandler.DownloadFile)
-	mux.HandleFunc("GET /raw/{slug}", pasteHandler.Raw)
-
-	// Universal slug dispatch: files, buckets, pastes
-	mux.HandleFunc("GET /{slug}", func(w http.ResponseWriter, r *http.Request) {
-		sl := r.PathValue("slug")
-
-		// Try file — route to fileHandler for all "file exists" signals:
-		// err == nil (not expired, any password state), ErrWrongPassword (never from GetMeta but
-		// included per spec), ErrExpired. Only skip if ErrNotFound.
-		if _, err := fileSvc.GetMeta(r.Context(), sl); err == nil ||
-			errors.Is(err, file.ErrWrongPassword) || errors.Is(err, file.ErrExpired) {
-			fileHandler.Serve(w, r)
-			return
+	// GET / catch-all — handles all GET requests that are not /health.
+	// Manual routing is used here because Go 1.22's ServeMux panics when patterns overlap
+	// without one being strictly more specific (e.g. /{slug}/info vs /b/{slug} both match /b/info).
+	// By consolidating all GET routing here we avoid any pattern conflicts while preserving
+	// the full URL structure that bucket and paste services generate.
+	//
+	// URL structure:
+	//   GET /{slug}                        → file or paste view (slug dispatcher)
+	//   GET /{slug}/info                   → file info (embed/preview page)
+	//   GET /{slug}/raw                    → paste raw text
+	//   GET /b/{slug}                      → bucket view (file listing)
+	//   GET /b/{slug}/zip                  → bucket ZIP download
+	//   GET /b/{slug}/file/{storageKey}    → individual bucket file download
+	//   GET /b/delete/{slug}/{secret}      → bucket delete
+	//   GET /delete/{slug}/{secret}        → file or paste delete (slug dispatcher)
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		// Split path into non-empty segments.
+		path := strings.Trim(r.URL.Path, "/")
+		var parts []string
+		if path != "" {
+			parts = strings.Split(path, "/")
 		}
-		// Try bucket — route to bucketHandler for all "bucket exists" signals.
-		if _, err := bucketSvc.GetMeta(r.Context(), sl, ""); err == nil ||
-			errors.Is(err, bucket.ErrWrongPassword) || errors.Is(err, bucket.ErrExpired) {
+
+		n := len(parts)
+
+		switch {
+		case n == 0:
+			// GET / — no content at root
+			http.NotFound(w, r)
+
+		case n == 1 && parts[0] == "health":
+			// Should be caught by the exact GET /health pattern above, but guard here.
+			handler.Health(w, r)
+
+		// ── File info ─────────────────────────────────────────────────────────
+		case n == 2 && parts[1] == "info":
+			// GET /{slug}/info
+			r.SetPathValue("slug", parts[0])
+			fileHandler.Info(w, r)
+
+		// ── Paste raw ─────────────────────────────────────────────────────────
+		case n == 2 && parts[1] == "raw":
+			// GET /{slug}/raw
+			r.SetPathValue("slug", parts[0])
+			pasteHandler.Raw(w, r)
+
+		// ── Bucket sub-routes ─────────────────────────────────────────────────
+		case n == 2 && parts[0] == "b" && parts[1] != "":
+			// GET /b/{slug} — bucket view
+			r.SetPathValue("slug", parts[1])
 			bucketHandler.View(w, r)
-			return
-		}
-		// Fall through to paste handler — it handles ErrNotFound with a 404.
-		pasteHandler.View(w, r)
-	})
 
-	// Universal delete dispatch
-	mux.HandleFunc("GET /delete/{slug}/{secret}", func(w http.ResponseWriter, r *http.Request) {
-		sl := r.PathValue("slug")
+		case n == 3 && parts[0] == "b" && parts[2] == "zip":
+			// GET /b/{slug}/zip
+			r.SetPathValue("slug", parts[1])
+			bucketHandler.DownloadZIP(w, r)
 
-		// Identify entity type by slug existence only (not by secret).
-		// Use GetMeta with empty password — only care whether ErrNotFound comes back.
-		if _, err := fileSvc.GetMeta(r.Context(), sl); !errors.Is(err, file.ErrNotFound) {
-			fileHandler.Delete(w, r)
-			return
-		}
-		if _, err := bucketSvc.GetMeta(r.Context(), sl, ""); !errors.Is(err, bucket.ErrNotFound) {
+		case n == 4 && parts[0] == "b" && parts[2] == "file":
+			// GET /b/{slug}/file/{storageKey}
+			r.SetPathValue("slug", parts[1])
+			r.SetPathValue("storageKey", parts[3])
+			bucketHandler.DownloadFile(w, r)
+
+		case n == 4 && parts[0] == "b" && parts[1] == "delete":
+			// GET /b/delete/{slug}/{secret}
+			r.SetPathValue("slug", parts[2])
+			r.SetPathValue("secret", parts[3])
 			bucketHandler.DeleteBucket(w, r)
-			return
+
+		// ── Delete dispatcher (files and pastes) ──────────────────────────────
+		case n == 3 && parts[0] == "delete":
+			// GET /delete/{slug}/{secret}
+			sl := parts[1]
+			r.SetPathValue("slug", sl)
+			r.SetPathValue("secret", parts[2])
+
+			// Identify entity type by slug existence only (not by secret).
+			// GetMeta does not check password; only ErrNotFound means the slug is absent.
+			if _, err := fileSvc.GetMeta(r.Context(), sl); !errors.Is(err, file.ErrNotFound) {
+				fileHandler.Delete(w, r)
+				return
+			}
+			pasteHandler.Delete(w, r) // returns 404 if not found
+
+		// ── Universal slug view (files and pastes) ────────────────────────────
+		case n == 1:
+			// GET /{slug}
+			sl := parts[0]
+			r.SetPathValue("slug", sl)
+
+			// Try file — route to fileHandler for all "file exists" signals.
+			// GetMeta does not check password, so password-protected files return nil.
+			// ErrExpired means the file exists (just expired). Only skip on ErrNotFound.
+			if _, err := fileSvc.GetMeta(r.Context(), sl); err == nil ||
+				errors.Is(err, file.ErrWrongPassword) || errors.Is(err, file.ErrExpired) {
+				fileHandler.Serve(w, r)
+				return
+			}
+			// Fall through to paste — pasteHandler.View returns 404 if slug not found.
+			pasteHandler.View(w, r)
+
+		default:
+			http.NotFound(w, r)
 		}
-		pasteHandler.Delete(w, r) // will return 404 if not found
 	})
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)

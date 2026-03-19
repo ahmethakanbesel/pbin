@@ -221,7 +221,7 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
   %s
   <div class="actions">
     <button onclick="navigator.clipboard.writeText(document.querySelector('code').textContent)">Copy</button>
-    <a href="/raw/%s">Raw</a>
+    <a href="/%s/raw">Raw</a>
   </div>
 </div>
 <div class="code-wrap">
@@ -262,7 +262,7 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
 	)
 }
 
-// Raw handles GET /raw/{slug} — returns paste content as plain text.
+// Raw handles GET /{slug}/raw — returns paste content as plain text.
 func (h *PasteHandler) Raw(w http.ResponseWriter, r *http.Request) {
 	securityHeaders(w)
 
