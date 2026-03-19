@@ -10,10 +10,12 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/ahmethakanbesel/pbin/internal/config"
+	"github.com/ahmethakanbesel/pbin/internal/domain/file"
 	"github.com/ahmethakanbesel/pbin/internal/filestore"
 	"github.com/ahmethakanbesel/pbin/internal/handler"
 	"github.com/ahmethakanbesel/pbin/internal/storage"
@@ -59,11 +61,21 @@ func main() {
 		slog.Error("failed to initialize file store", "error", err)
 		os.Exit(1)
 	}
-	_ = fs // will be used in Phase 2
 	slog.Info("file store ready", "path", cfg.Storage.Path)
+
+	// Build base URL from config (used in shareable URLs returned to uploaders).
+	baseURL := "http://" + cfg.Server.Host + ":" + strconv.Itoa(cfg.Server.Port)
+
+	fileRepo := storage.NewFileRepo(db)
+	fileSvc := file.NewService(fileRepo, fs, baseURL)
+	fileHandler := handler.NewFileHandler(fileSvc, cfg.Upload.MaxBytes)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", handler.Health)
+	mux.HandleFunc("POST /api/upload", fileHandler.Upload)
+	mux.HandleFunc("GET /{slug}/info", fileHandler.Info)
+	mux.HandleFunc("GET /{slug}", fileHandler.Serve)
+	mux.HandleFunc("GET /delete/{slug}/{secret}", fileHandler.Delete)
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	srv := &http.Server{
