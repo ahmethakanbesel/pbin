@@ -47,7 +47,13 @@ Plans:
   5. User sets a password on a file share; downloading requires the correct password or the request is rejected
   6. User marks a file as one-time download; the second download attempt after the first successful delivery returns 410 Gone
   7. User uploads a PNG/JPEG/GIF/WebP image and receives direct embed link plus ready-to-copy HTML, BBCode, and Markdown embed codes
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Migration 002 (delete_secret column), File entity extension (DeleteSecret + IsImage), FileService (Upload/Get/Delete)
+- [ ] 02-02-PLAN.md — SQLite file repository (file.Repository implementation), ExpiresAt on File entity
+- [ ] 02-03-PLAN.md — HTTP handlers (Upload POST /api/upload, Serve GET /{slug}, Delete GET /delete/{slug}/{secret})
+- [ ] 02-04-PLAN.md — main.go wiring + end-to-end human verification
 
 ### Phase 3: Buckets and Paste
 **Goal**: Users can upload multiple files to a transfer bucket and download them as a ZIP bundle, and users can create syntax-highlighted pastes with raw access — both supporting expiry, password protection, and one-use semantics.
@@ -82,6 +88,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-19 |
-| 2. File Sharing | 0/TBD | Not started | - |
+| 2. File Sharing | 0/4 | Not started | - |
 | 3. Buckets and Paste | 0/TBD | Not started | - |
 | 4. API, Web UI, and Delivery | 0/TBD | Not started | - |
