@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Go module, SQLite/WAL, migrations, slug generation, config, local file storage (completed 2026-03-19)
 - [x] **Phase 2: File Sharing** - Upload, download, expiry, deletion tokens, password protection, one-use, image embed links (completed 2026-03-19)
-- [ ] **Phase 3: Buckets and Paste** - Multi-file transfer buckets with ZIP download; pastebin with syntax highlighting and one-use
+- [x] **Phase 3: Buckets and Paste** - Multi-file transfer buckets with ZIP download; pastebin with syntax highlighting and one-use (completed 2026-03-19)
 - [ ] **Phase 4: API, Web UI, and Delivery** - Finalized REST API, embedded web UI, Basic Auth, expiry cleanup worker, single-binary build
 
 ## Phase Details
@@ -97,5 +97,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-19 |
 | 2. File Sharing | 4/4 | Complete   | 2026-03-19 |
-| 3. Buckets and Paste | 5/6 | In Progress|  |
+| 3. Buckets and Paste | 6/6 | Complete   | 2026-03-19 |
 | 4. API, Web UI, and Delivery | 0/TBD | Not started | - |
