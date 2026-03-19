@@ -1,0 +1,395 @@
+// Package handler provides HTTP handlers for the pbin service.
+package handler
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+
+	"github.com/ahmethakanbesel/pbin/internal/domain/file"
+)
+
+const (
+	multipartMemory = 32 << 20 // 32 MB max in-memory multipart buffer
+)
+
+// FileService is the interface the handler depends on (allows mock injection in tests).
+type FileService interface {
+	Upload(ctx context.Context, req file.UploadRequest) (file.UploadResult, error)
+	Get(ctx context.Context, shareSlug, passwordAttempt string) (file.GetResult, error)
+	Delete(ctx context.Context, shareSlug, deleteSecret string) error
+}
+
+// FileHandler handles file upload, download, share info, and deletion.
+type FileHandler struct {
+	svc            FileService
+	maxUploadBytes int64
+}
+
+// NewFileHandler constructs a FileHandler.
+func NewFileHandler(svc FileService, maxUploadBytes int64) *FileHandler {
+	return &FileHandler{svc: svc, maxUploadBytes: maxUploadBytes}
+}
+
+// securityHeaders sets security headers required on all responses.
+func securityHeaders(w http.ResponseWriter) {
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-Frame-Options", "DENY")
+}
+
+// writeJSON encodes v as JSON with the given status code.
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(v)
+}
+
+// writeError writes a JSON error response.
+func writeError(w http.ResponseWriter, status int, msg string) {
+	writeJSON(w, status, map[string]string{"error": msg})
+}
+
+// uploadResponse is the JSON shape returned after a successful upload.
+type uploadResponse struct {
+	URL       string  `json:"url"`
+	DeleteURL string  `json:"delete_url"`
+	ExpiresAt *string `json:"expires_at"` // RFC3339 or null
+	IsImage   bool    `json:"is_image"`
+}
+
+// Upload handles POST /api/upload (multipart form).
+func (h *FileHandler) Upload(w http.ResponseWriter, r *http.Request) {
+	securityHeaders(w)
+
+	// Enforce upload size before any parsing.
+	r.Body = http.MaxBytesReader(w, r.Body, h.maxUploadBytes)
+
+	if err := r.ParseMultipartForm(multipartMemory); err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			writeError(w, http.StatusRequestEntityTooLarge, fmt.Sprintf("file exceeds maximum size of %d bytes", h.maxUploadBytes))
+			return
+		}
+		writeError(w, http.StatusBadRequest, "invalid multipart form")
+		return
+	}
+	defer r.MultipartForm.RemoveAll()
+
+	// Call r.FormFile once; capture both the file handle and header.
+	fh, fhdr, err := r.FormFile("file")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "missing 'file' field in form")
+		return
+	}
+	defer fh.Close()
+
+	filename := fhdr.Filename
+	if filename == "" {
+		filename = "upload"
+	}
+	size := fhdr.Size
+
+	// Detect MIME type from first 512 bytes, then re-combine for streaming.
+	peek := make([]byte, 512)
+	n, _ := fh.Read(peek)
+	peek = peek[:n]
+	mimeType := http.DetectContentType(peek)
+
+	// Force application/octet-stream for dangerous types.
+	// SVG comes as text/xml or image/svg+xml — both are unsafe for inline serving.
+	switch mimeType {
+	case "text/html", "text/xml", "image/svg+xml", "application/xhtml+xml":
+		mimeType = "application/octet-stream"
+	}
+
+	// If the detected MIME type claims to be an image, verify magic bytes.
+	if file.IsImage(mimeType) && !validateImageMagic(mimeType, peek) {
+		mimeType = "application/octet-stream"
+	}
+
+	// Re-combine peeked bytes with remaining file content.
+	content := io.MultiReader(bytes.NewReader(peek), fh)
+
+	expiry := r.FormValue("expiry")
+	if expiry == "" {
+		expiry = "1d"
+	}
+	password := r.FormValue("password")
+	oneUse := r.FormValue("one_use") == "1"
+
+	result, err := h.svc.Upload(r.Context(), file.UploadRequest{
+		Filename: filename,
+		MimeType: mimeType,
+		Size:     size,
+		Expiry:   expiry,
+		Password: password,
+		OneUse:   oneUse,
+		Content:  content,
+	})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "upload failed")
+		return
+	}
+
+	resp := uploadResponse{
+		URL:       result.URL,
+		DeleteURL: result.DeleteURL,
+		IsImage:   result.IsImage,
+	}
+	if result.ExpiresAt != nil {
+		s := result.ExpiresAt.UTC().Format(time.RFC3339)
+		resp.ExpiresAt = &s
+	}
+
+	writeJSON(w, http.StatusCreated, resp)
+}
+
+// Serve handles GET /{slug} — file download with expiry/one-use/password enforcement.
+func (h *FileHandler) Serve(w http.ResponseWriter, r *http.Request) {
+	securityHeaders(w)
+
+	slug := r.PathValue("slug")
+	if slug == "" {
+		writeError(w, http.StatusBadRequest, "missing slug")
+		return
+	}
+
+	password := r.Header.Get("X-Password")
+	// Also accept ?password= query param for browser form submission.
+	if password == "" {
+		password = r.URL.Query().Get("password")
+	}
+
+	result, err := h.svc.Get(r.Context(), slug, password)
+	if err != nil {
+		switch {
+		case errors.Is(err, file.ErrNotFound):
+			writeError(w, http.StatusNotFound, "not found")
+		case errors.Is(err, file.ErrExpired):
+			writeError(w, http.StatusGone, "file has expired")
+		case errors.Is(err, file.ErrAlreadyConsumed):
+			writeError(w, http.StatusGone, "file has already been downloaded")
+		case errors.Is(err, file.ErrWrongPassword):
+			// Show password form for browser requests; 401 JSON for API requests.
+			acceptJSON := r.Header.Get("Accept") == "application/json"
+			if acceptJSON || r.Header.Get("X-Password") != "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "wrong password"})
+			} else {
+				servePasswordForm(w, slug)
+			}
+		default:
+			writeError(w, http.StatusInternalServerError, "internal error")
+		}
+		return
+	}
+	defer result.Content.Close()
+
+	// Set Content-Security-Policy for share pages.
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
+
+	filename := result.F.Filename
+	if filename == "" {
+		filename = slug
+	}
+
+	if result.IsImage {
+		w.Header().Set("Content-Type", result.F.MimeType)
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename=%q`, filename))
+	} else {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%q`, filename))
+	}
+
+	io.Copy(w, result.Content)
+}
+
+// servePasswordForm writes a minimal HTML password prompt.
+func servePasswordForm(w http.ResponseWriter, slug string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'")
+	w.WriteHeader(http.StatusUnauthorized)
+	fmt.Fprintf(w, `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Password Required</title>
+<style>body{font-family:sans-serif;max-width:400px;margin:4rem auto;padding:1rem}
+input{display:block;width:100%%;padding:.5rem;margin:.5rem 0}
+button{padding:.5rem 1rem}</style></head>
+<body>
+<h2>Password Required</h2>
+<p>This file is password protected.</p>
+<form method="GET" action="/%s">
+  <label for="pw">Password</label>
+  <input id="pw" type="password" name="password" required autofocus>
+  <button type="submit">Download</button>
+</form>
+</body></html>`, slug)
+}
+
+// deleteResponse is the JSON shape returned after a successful deletion.
+type deleteResponse struct {
+	Deleted bool `json:"deleted"`
+}
+
+// Delete handles GET /delete/{slug}/{secret}.
+func (h *FileHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	securityHeaders(w)
+
+	slug := r.PathValue("slug")
+	secret := r.PathValue("secret")
+
+	if slug == "" || secret == "" {
+		writeError(w, http.StatusBadRequest, "missing slug or secret")
+		return
+	}
+
+	if err := h.svc.Delete(r.Context(), slug, secret); err != nil {
+		switch {
+		case errors.Is(err, file.ErrNotFound):
+			writeError(w, http.StatusNotFound, "not found")
+		case errors.Is(err, file.ErrBadDeleteSecret):
+			writeError(w, http.StatusForbidden, "invalid delete token")
+		default:
+			writeError(w, http.StatusInternalServerError, "internal error")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, deleteResponse{Deleted: true})
+}
+
+// imageMagicBytes maps validated MIME types to their magic byte signatures.
+var imageMagicBytes = map[string][][]byte{
+	"image/png":  {{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}},
+	"image/jpeg": {{0xFF, 0xD8, 0xFF}},
+	"image/gif":  {[]byte("GIF87a"), []byte("GIF89a")},
+	"image/bmp":  {{0x42, 0x4D}},
+	// WebP checked separately below (RIFF....WEBP pattern)
+}
+
+// validateImageMagic reports whether the first bytes of peek match known image signatures
+// for the given MIME type. For WebP: bytes 0-3 must be "RIFF" and bytes 8-11 must be "WEBP".
+func validateImageMagic(mimeType string, peek []byte) bool {
+	if len(peek) < 4 {
+		return false
+	}
+	switch mimeType {
+	case "image/webp":
+		return len(peek) >= 12 &&
+			string(peek[0:4]) == "RIFF" &&
+			string(peek[8:12]) == "WEBP"
+	default:
+		sigs, ok := imageMagicBytes[mimeType]
+		if !ok {
+			return false
+		}
+		for _, sig := range sigs {
+			if len(peek) >= len(sig) && bytes.Equal(peek[:len(sig)], sig) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Info handles GET /{slug}/info — renders an HTML share page with embed codes for image files.
+// For non-image files it redirects to /{slug} for direct download.
+func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
+	securityHeaders(w)
+
+	slug := r.PathValue("slug")
+	if slug == "" {
+		writeError(w, http.StatusBadRequest, "missing slug")
+		return
+	}
+
+	password := r.Header.Get("X-Password")
+	if password == "" {
+		password = r.URL.Query().Get("password")
+	}
+
+	result, err := h.svc.Get(r.Context(), slug, password)
+	if err != nil {
+		switch {
+		case errors.Is(err, file.ErrNotFound):
+			writeError(w, http.StatusNotFound, "not found")
+		case errors.Is(err, file.ErrExpired):
+			writeError(w, http.StatusGone, "file has expired")
+		case errors.Is(err, file.ErrAlreadyConsumed):
+			writeError(w, http.StatusGone, "file has already been downloaded")
+		case errors.Is(err, file.ErrWrongPassword):
+			acceptJSON := r.Header.Get("Accept") == "application/json"
+			if acceptJSON || r.Header.Get("X-Password") != "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				json.NewEncoder(w).Encode(map[string]string{"error": "wrong password"})
+			} else {
+				servePasswordForm(w, slug+"/info")
+			}
+		default:
+			writeError(w, http.StatusInternalServerError, "internal error")
+		}
+		return
+	}
+	// Close content immediately — Info only needs metadata, not file bytes.
+	result.Content.Close()
+
+	// Non-image files: redirect to direct download.
+	if !result.IsImage {
+		http.Redirect(w, r, "/"+slug, http.StatusFound)
+		return
+	}
+
+	// Build the shareable URL for embed codes.
+	// The handler derives the absolute URL from the request (scheme + host).
+	scheme := "https"
+	if r.TLS == nil {
+		scheme = "http"
+	}
+	baseURL := scheme + "://" + r.Host
+	fileURL := baseURL + "/" + slug
+	filename := result.F.Filename
+	if filename == "" {
+		filename = slug
+	}
+
+	htmlEmbed := fmt.Sprintf(`<img src="%s" alt="%s">`, fileURL, filename)
+	bbcodeEmbed := fmt.Sprintf(`[img]%s[/img]`, fileURL)
+	markdownEmbed := fmt.Sprintf(`![%s](%s)`, filename, fileURL)
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'")
+	fmt.Fprintf(w, `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>%s — pbin</title>
+<style>
+body{font-family:sans-serif;max-width:700px;margin:2rem auto;padding:1rem}
+img{max-width:100%%;border:1px solid #ddd;border-radius:4px;margin-bottom:1.5rem}
+h1{font-size:1.2rem;margin-bottom:1rem}
+.embed-group{margin-bottom:1rem}
+label{display:block;font-size:.85rem;font-weight:bold;margin-bottom:.25rem;color:#555}
+code{display:block;background:#f4f4f4;padding:.5rem .75rem;border-radius:3px;font-size:.9rem;word-break:break-all;user-select:all}
+</style></head>
+<body>
+<h1>%s</h1>
+<img src="/%s" alt="%s">
+<div class="embed-group"><label>HTML</label><code>%s</code></div>
+<div class="embed-group"><label>BBCode</label><code>%s</code></div>
+<div class="embed-group"><label>Markdown</label><code>%s</code></div>
+<div class="embed-group"><label>Direct link</label><code>%s</code></div>
+</body></html>`,
+		filename,
+		filename,
+		slug, filename,
+		htmlEmbed,
+		bbcodeEmbed,
+		markdownEmbed,
+		fileURL,
+	)
+}
