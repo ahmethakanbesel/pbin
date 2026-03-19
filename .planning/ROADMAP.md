@@ -86,7 +86,13 @@ Plans:
   3. When Basic Auth is configured, unauthenticated requests to write endpoints (upload, create) are rejected with 401; read endpoints remain public
   4. Expired files, buckets, and pastes are automatically deleted (DB row and on-disk data) by a background worker; the worker restarts itself on panic and does not leak open SQL rows
   5. Admin sets max upload size in config and uploads exceeding that limit are rejected before the request body is fully read
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Basic Auth middleware (internal/middleware/auth.go) + expiry cleanup worker (internal/worker/cleanup.go)
+- [ ] 04-02-PLAN.md — Web UI form handlers: Home (/), Paste (/paste), Bucket (/bucket) in internal/handler/ui.go
+- [ ] 04-03-PLAN.md — main.go wiring: auth middleware on write endpoints, cleanup worker lifecycle, UI route registration
+- [ ] 04-04-PLAN.md — End-to-end automated smoke test + human browser verification
 
 ## Progress
 
@@ -98,4 +104,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 3/3 | Complete   | 2026-03-19 |
 | 2. File Sharing | 4/4 | Complete   | 2026-03-19 |
 | 3. Buckets and Paste | 6/6 | Complete   | 2026-03-19 |
-| 4. API, Web UI, and Delivery | 0/TBD | Not started | - |
+| 4. API, Web UI, and Delivery | 0/4 | Not started | - |
