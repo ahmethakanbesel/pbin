@@ -2,16 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-03-19T16:50:53.922Z"
-last_activity: 2026-03-19 — Roadmap created, requirements mapped to 4 phases
+status: unknown
+stopped_at: Completed 01-foundation-01-PLAN.md
+last_updated: "2026-03-19T17:08:46.692Z"
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 3
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,16 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Users can share files, transfer file bundles, and paste text through a single self-hosted service that runs from one binary with zero external dependencies.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Phase 01 — foundation
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-19 — Roadmap created, requirements mapped to 4 phases
-
-Progress: [░░░░░░░░░░] 0%
+Phase: 01 (foundation) — EXECUTING
+Plan: 1 of 3
 
 ## Performance Metrics
 
@@ -52,6 +46,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01-foundation P01 | 12 | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -65,6 +60,9 @@ Recent decisions affecting current work:
 - [Roadmap]: `knadh/koanf/v2` for config (TOML + env var overrides)
 - [Roadmap]: Go 1.22+ `net/http.ServeMux` only — no web framework
 - [Roadmap]: `Content-Disposition: attachment` forced on all served files (XSS prevention — cannot be retrofitted)
+- [Phase 01-foundation]: Config defaults via struct literal; koanf layered on top with Exists() guards (no Static provider exists)
+- [Phase 01-foundation]: Slug charset excludes ambiguous chars (0/O/1/l/I) for human readability
+- [Phase 01-foundation]: Env var transform: PBIN_SERVER_PORT -> server.port (strip prefix, lowercase, _ -> .)
 
 ### Pending Todos
 
@@ -77,6 +75,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T16:50:53.918Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-foundation/01-CONTEXT.md
+Last session: 2026-03-19T17:08:46.688Z
+Stopped at: Completed 01-foundation-01-PLAN.md
+Resume file: None

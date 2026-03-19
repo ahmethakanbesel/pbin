@@ -41,7 +41,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **INFRA-03**: Optional instance-level Basic Auth gating write endpoints
 - [ ] **INFRA-04**: Background worker automatically cleans up expired files, buckets, and pastes
 - [ ] **INFRA-05**: Admin can configure max upload size
-- [ ] **INFRA-06**: Application runs as a single binary with SQLite (CGO-free), zero external dependencies
+- [x] **INFRA-06**: Application runs as a single binary with SQLite (CGO-free), zero external dependencies
 
 ## v2 Requirements
 
@@ -106,7 +106,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-03 | Phase 4 | Pending |
 | INFRA-04 | Phase 4 | Pending |
 | INFRA-05 | Phase 4 | Pending |
-| INFRA-06 | Phase 1 | Pending |
+| INFRA-06 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 24 total
