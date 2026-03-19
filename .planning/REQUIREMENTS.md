@@ -20,19 +20,19 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Transfer Buckets
 
-- [ ] **BUCK-01**: User can upload multiple files to a single bucket and receive a shareable link
+- [x] **BUCK-01**: User can upload multiple files to a single bucket and receive a shareable link
 - [ ] **BUCK-02**: User can set expiry on a bucket (same presets as file sharing)
 - [ ] **BUCK-03**: User can download all files in a bucket as a ZIP bundle
-- [ ] **BUCK-04**: User can password-protect a transfer bucket
-- [ ] **BUCK-05**: User can mark a bucket as one-time download (auto-deletes after first download)
+- [x] **BUCK-04**: User can password-protect a transfer bucket
+- [x] **BUCK-05**: User can mark a bucket as one-time download (auto-deletes after first download)
 
 ### Pastebin
 
-- [ ] **PASTE-01**: User can create a text paste with optional title and receive a shareable link
+- [x] **PASTE-01**: User can create a text paste with optional title and receive a shareable link
 - [ ] **PASTE-02**: User can view a paste with syntax highlighting (language selectable)
 - [ ] **PASTE-03**: User can access raw paste content via `/raw/{id}` endpoint
-- [ ] **PASTE-04**: User can set expiry on a paste (same presets)
-- [ ] **PASTE-05**: User can mark a paste as one-use (auto-deletes after first view)
+- [x] **PASTE-04**: User can set expiry on a paste (same presets)
+- [x] **PASTE-05**: User can mark a paste as one-use (auto-deletes after first view)
 
 ### Infrastructure
 
@@ -91,16 +91,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILE-06 | Phase 2 | Complete |
 | FILE-07 | Phase 2 | Complete |
 | FILE-08 | Phase 2 | Complete |
-| BUCK-01 | Phase 3 | Pending |
+| BUCK-01 | Phase 3 | Complete |
 | BUCK-02 | Phase 3 | Pending |
 | BUCK-03 | Phase 3 | Pending |
-| BUCK-04 | Phase 3 | Pending |
-| BUCK-05 | Phase 3 | Pending |
-| PASTE-01 | Phase 3 | Pending |
+| BUCK-04 | Phase 3 | Complete |
+| BUCK-05 | Phase 3 | Complete |
+| PASTE-01 | Phase 3 | Complete |
 | PASTE-02 | Phase 3 | Pending |
 | PASTE-03 | Phase 3 | Pending |
-| PASTE-04 | Phase 3 | Pending |
-| PASTE-05 | Phase 3 | Pending |
+| PASTE-04 | Phase 3 | Complete |
+| PASTE-05 | Phase 3 | Complete |
 | INFRA-01 | Phase 4 | Pending |
 | INFRA-02 | Phase 4 | Pending |
 | INFRA-03 | Phase 4 | Pending |
