@@ -21,7 +21,9 @@ import (
 	"github.com/ahmethakanbesel/pbin/internal/domain/paste"
 	"github.com/ahmethakanbesel/pbin/internal/filestore"
 	"github.com/ahmethakanbesel/pbin/internal/handler"
+	"github.com/ahmethakanbesel/pbin/internal/middleware"
 	"github.com/ahmethakanbesel/pbin/internal/storage"
+	"github.com/ahmethakanbesel/pbin/internal/worker"
 )
 
 func main() {
@@ -81,18 +83,25 @@ func main() {
 	pasteSvc := paste.NewService(pasteRepo, baseURL)
 	pasteHandler := handler.NewPasteHandler(pasteSvc)
 
+	uiHandler := handler.NewUIHandler()
+
+	cleanupWorker := worker.NewCleanup(fileRepo, bucketRepo, pasteRepo, fs, 15*time.Minute)
+	cleanupWorker.Start()
+
 	mux := http.NewServeMux()
 
 	// Fixed routes that do not conflict with the GET / catch-all.
 	mux.HandleFunc("GET /health", handler.Health)
-	mux.HandleFunc("POST /api/upload", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("POST /api/upload", middleware.BasicAuth(cfg.Auth, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("type") == "bucket" {
 			bucketHandler.Upload(w, r)
 		} else {
 			fileHandler.Upload(w, r)
 		}
-	})
-	mux.HandleFunc("POST /api/paste", pasteHandler.Create)
+	})))
+	mux.Handle("POST /api/paste", middleware.BasicAuth(cfg.Auth, http.HandlerFunc(pasteHandler.Create)))
+	mux.Handle("GET /paste", middleware.BasicAuth(cfg.Auth, http.HandlerFunc(uiHandler.Paste)))
+	mux.Handle("GET /bucket", middleware.BasicAuth(cfg.Auth, http.HandlerFunc(uiHandler.Bucket)))
 
 	// GET / catch-all — handles all GET requests that are not /health.
 	// Manual routing is used here because Go 1.22's ServeMux panics when patterns overlap
@@ -121,8 +130,8 @@ func main() {
 
 		switch {
 		case n == 0:
-			// GET / — no content at root
-			http.NotFound(w, r)
+			// GET / — file upload homepage
+			middleware.BasicAuth(cfg.Auth, http.HandlerFunc(uiHandler.Home)).ServeHTTP(w, r)
 
 		case n == 1 && parts[0] == "health":
 			// Should be caught by the exact GET /health pattern above, but guard here.
@@ -223,6 +232,7 @@ func main() {
 
 	<-quit
 	slog.Info("shutting down server")
+	cleanupWorker.Stop()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
