@@ -12,7 +12,9 @@ Users can share files, transfer file bundles, and paste text through a single se
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ SQLite backend using a CGO-free library — Validated in Phase 1: Foundation
+- ✓ Single binary distribution — Validated in Phase 1: Foundation
+- ✓ Domain-driven design, idiomatic Go — Validated in Phase 1: Foundation
 
 ### Active
 
@@ -21,14 +23,11 @@ Users can share files, transfer file bundles, and paste text through a single se
 - [ ] Pastebin with syntax highlighting and expiry
 - [ ] Embedded web UI served from the binary (no separate frontend server)
 - [ ] REST API for all operations
-- [ ] SQLite backend using a CGO-free library
-- [ ] Single binary distribution
 - [ ] Optional basic auth for instance-level access control
 - [ ] Fixed expiry presets (10min, 1h, 6h, 1d, 7d, 30d, 90d, 1y, never)
 - [ ] ZIP bundle download for transfer buckets
 - [ ] Configurable max upload size
 - [ ] One-use pastes (auto-delete after first view)
-- [ ] Domain-driven design, idiomatic Go
 
 ### Out of Scope
 
@@ -61,12 +60,14 @@ The goal is to unify these three capabilities into a single Go binary backed by 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| SQLite over Postgres/MySQL | Single-file DB matches single-binary goal, zero ops | — Pending |
-| CGO-free SQLite | Enables cross-compilation, simpler builds | — Pending |
-| No web framework | Idiomatic Go, fewer dependencies, stdlib is capable | — Pending |
+| SQLite over Postgres/MySQL | Single-file DB matches single-binary goal, zero ops | ✓ Good |
+| CGO-free SQLite (modernc.org/sqlite) | Enables cross-compilation, simpler builds | ✓ Good |
+| No web framework | Idiomatic Go, fewer dependencies, stdlib is capable | ✓ Good |
 | Standard uploads over tus.io | Simpler implementation, covers most use cases | — Pending |
 | Optional basic auth over API keys | Simpler model, instance-level control | — Pending |
 | Fixed expiry presets over free-form | Better UX, predictable cleanup | — Pending |
+| Two-pool SQLite (1 write, N read) | Prevents writer contention with WAL mode | ✓ Good |
+| goose embedded migrations | Schema versioning from day one, runs at startup | ✓ Good |
 
 ---
-*Last updated: 2026-03-19 after initialization*
+*Last updated: 2026-03-19 after Phase 1: Foundation complete*
