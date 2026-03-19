@@ -6,9 +6,14 @@ import (
 )
 
 var (
-	ErrInvalidExpiry = errors.New("paste: expiry must be a valid preset")
-	ErrEmptyContent  = errors.New("paste: content must not be empty")
-	ErrEmptySlug     = errors.New("paste: slug must not be empty")
+	ErrInvalidExpiry   = errors.New("paste: expiry must be a valid preset")
+	ErrEmptyContent    = errors.New("paste: content must not be empty")
+	ErrEmptySlug       = errors.New("paste: slug must not be empty")
+	ErrNotFound        = errors.New("paste: not found")
+	ErrExpired         = errors.New("paste: expired")
+	ErrAlreadyConsumed = errors.New("paste: one-use paste already consumed")
+	ErrWrongPassword   = errors.New("paste: wrong password")
+	ErrBadDeleteSecret = errors.New("paste: invalid delete secret")
 )
 
 var validExpiries = map[string]time.Duration{
@@ -32,6 +37,8 @@ type Paste struct {
 	PasswordHash string
 	OneUse       bool
 	Expiry       string
+	DeleteSecret string
+	ExpiresAt    *time.Time
 }
 
 // New validates and constructs a Paste.
