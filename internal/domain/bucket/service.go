@@ -263,6 +263,51 @@ func (s *Service) StreamZIP(ctx context.Context, bucketSlug, passwordAttempt str
 	return nil
 }
 
+// GetFile retrieves metadata and a reader for a single file within a bucket.
+// Enforces expiry and password checks. Returns ErrNotFound if storageKey is not in the bucket.
+func (s *Service) GetFile(ctx context.Context, bucketSlug, storageKey, passwordAttempt string) (BucketFile, io.ReadCloser, error) {
+	b, err := s.repo.GetBySlug(ctx, bucketSlug)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return BucketFile{}, nil, ErrNotFound
+		}
+		return BucketFile{}, nil, fmt.Errorf("bucket service get file: lookup: %w", err)
+	}
+
+	if b.ExpiresAt != nil && time.Now().After(*b.ExpiresAt) {
+		return BucketFile{}, nil, ErrExpired
+	}
+
+	if b.PasswordHash != "" {
+		if passwordAttempt == "" {
+			return BucketFile{}, nil, ErrWrongPassword
+		}
+		if err := bcrypt.CompareHashAndPassword([]byte(b.PasswordHash), []byte(passwordAttempt)); err != nil {
+			return BucketFile{}, nil, ErrWrongPassword
+		}
+	}
+
+	var target BucketFile
+	found := false
+	for _, bf := range b.Files {
+		if bf.StorageKey == storageKey {
+			target = bf
+			found = true
+			break
+		}
+	}
+	if !found {
+		return BucketFile{}, nil, ErrNotFound
+	}
+
+	rc, err := s.store.Read(ctx, storageKey)
+	if err != nil {
+		return BucketFile{}, nil, fmt.Errorf("bucket service get file: read storage: %w", err)
+	}
+
+	return target, rc, nil
+}
+
 // Delete removes a bucket and all its files if the deleteSecret matches.
 func (s *Service) Delete(ctx context.Context, bucketSlug, deleteSecret string) error {
 	b, err := s.repo.GetBySlug(ctx, bucketSlug)
