@@ -123,14 +123,9 @@ func (s *Service) Upload(ctx context.Context, req UploadRequest) (UploadResult, 
 	}, nil
 }
 
-// Get retrieves a file by slug, enforcing one-use and password protection.
+// Get retrieves a file by slug, enforcing expiry, one-use, and password protection.
 // The caller MUST close GetResult.Content when done.
 // passwordAttempt is the plain-text password; pass "" if the file is not password-protected.
-//
-// NOTE: Read-time expiry enforcement (ErrExpired) requires the File entity to carry an ExpiresAt
-// field populated by the repository. This will be addressed in Plan 02 when the SQLite repository
-// is implemented. For now, expiry is enforced at cleanup-worker time (Phase 4) and via the repo
-// returning ErrNotFound for already-deleted rows.
 func (s *Service) Get(ctx context.Context, shareSlug, passwordAttempt string) (GetResult, error) {
 	f, err := s.repo.GetBySlug(ctx, shareSlug)
 	if err != nil {
@@ -138,6 +133,11 @@ func (s *Service) Get(ctx context.Context, shareSlug, passwordAttempt string) (G
 			return GetResult{}, ErrNotFound
 		}
 		return GetResult{}, fmt.Errorf("file service get: lookup: %w", err)
+	}
+
+	// Enforce expiry at read time (requires repository to populate ExpiresAt).
+	if f.ExpiresAt != nil && time.Now().After(*f.ExpiresAt) {
+		return GetResult{}, ErrExpired
 	}
 
 	// Enforce password before returning content.
@@ -167,9 +167,10 @@ func (s *Service) Get(ctx context.Context, shareSlug, passwordAttempt string) (G
 	}
 
 	return GetResult{
-		F:       f,
-		Content: rc,
-		IsImage: IsImage(f.MimeType),
+		F:         f,
+		Content:   rc,
+		ExpiresAt: f.ExpiresAt,
+		IsImage:   IsImage(f.MimeType),
 	}, nil
 }
 

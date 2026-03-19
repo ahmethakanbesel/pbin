@@ -57,6 +57,7 @@ type File struct {
 	OneUse       bool
 	Expiry       string // preset string e.g. "1d"
 	DeleteSecret string // random slug stored in DB; sent to uploader for deletion
+	ExpiresAt    *time.Time // populated by repository on reads; nil = never expires
 }
 
 // New validates and constructs a File. Slug and expiry are required.
