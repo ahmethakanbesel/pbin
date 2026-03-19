@@ -9,12 +9,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### File Sharing
 
-- [ ] **FILE-01**: User can upload a file and receive a shareable link
+- [x] **FILE-01**: User can upload a file and receive a shareable link
 - [ ] **FILE-02**: User can download a file via direct URL (curl-friendly)
-- [ ] **FILE-03**: User can set expiry on upload (10min, 1h, 6h, 1d, 7d, 30d, 90d, 1y, never)
-- [ ] **FILE-04**: User receives a deletion token on upload and can delete the file with it
-- [ ] **FILE-05**: User can password-protect a file share
-- [ ] **FILE-06**: User can mark a file as one-time download (auto-deletes after first download)
+- [x] **FILE-03**: User can set expiry on upload (10min, 1h, 6h, 1d, 7d, 30d, 90d, 1y, never)
+- [x] **FILE-04**: User receives a deletion token on upload and can delete the file with it
+- [x] **FILE-05**: User can password-protect a file share
+- [x] **FILE-06**: User can mark a file as one-time download (auto-deletes after first download)
 - [ ] **FILE-07**: User can get a direct embed link for validated image files (extension + magic byte validation)
 - [ ] **FILE-08**: User is shown ready-to-copy HTML, BBCode, and Markdown embed codes for image uploads
 
@@ -83,12 +83,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FILE-01 | Phase 2 | Pending |
+| FILE-01 | Phase 2 | Complete |
 | FILE-02 | Phase 2 | Pending |
-| FILE-03 | Phase 2 | Pending |
-| FILE-04 | Phase 2 | Pending |
-| FILE-05 | Phase 2 | Pending |
-| FILE-06 | Phase 2 | Pending |
+| FILE-03 | Phase 2 | Complete |
+| FILE-04 | Phase 2 | Complete |
+| FILE-05 | Phase 2 | Complete |
+| FILE-06 | Phase 2 | Complete |
 | FILE-07 | Phase 2 | Pending |
 | FILE-08 | Phase 2 | Pending |
 | BUCK-01 | Phase 3 | Pending |
