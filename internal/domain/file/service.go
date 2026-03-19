@@ -174,6 +174,24 @@ func (s *Service) Get(ctx context.Context, shareSlug, passwordAttempt string) (G
 	}, nil
 }
 
+// GetMeta retrieves file metadata by slug without consuming one-use files.
+// Used by the Info/embed page to show metadata without triggering the one-use download.
+func (s *Service) GetMeta(ctx context.Context, shareSlug string) (File, error) {
+	f, err := s.repo.GetBySlug(ctx, shareSlug)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return File{}, ErrNotFound
+		}
+		return File{}, fmt.Errorf("file service get meta: lookup: %w", err)
+	}
+
+	if f.ExpiresAt != nil && time.Now().After(*f.ExpiresAt) {
+		return File{}, ErrExpired
+	}
+
+	return f, nil
+}
+
 // Delete removes a file if the deleteSecret matches.
 func (s *Service) Delete(ctx context.Context, shareSlug, deleteSecret string) error {
 	f, err := s.repo.GetBySlug(ctx, shareSlug)

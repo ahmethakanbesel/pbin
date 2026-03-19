@@ -22,6 +22,7 @@ const (
 type FileService interface {
 	Upload(ctx context.Context, req file.UploadRequest) (file.UploadResult, error)
 	Get(ctx context.Context, shareSlug, passwordAttempt string) (file.GetResult, error)
+	GetMeta(ctx context.Context, shareSlug string) (file.File, error)
 	Delete(ctx context.Context, shareSlug, deleteSecret string) error
 }
 
@@ -309,39 +310,21 @@ func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	password := r.Header.Get("X-Password")
-	if password == "" {
-		password = r.URL.Query().Get("password")
-	}
-
-	result, err := h.svc.Get(r.Context(), slug, password)
+	f, err := h.svc.GetMeta(r.Context(), slug)
 	if err != nil {
 		switch {
 		case errors.Is(err, file.ErrNotFound):
 			writeError(w, http.StatusNotFound, "not found")
 		case errors.Is(err, file.ErrExpired):
 			writeError(w, http.StatusGone, "file has expired")
-		case errors.Is(err, file.ErrAlreadyConsumed):
-			writeError(w, http.StatusGone, "file has already been downloaded")
-		case errors.Is(err, file.ErrWrongPassword):
-			acceptJSON := r.Header.Get("Accept") == "application/json"
-			if acceptJSON || r.Header.Get("X-Password") != "" {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(map[string]string{"error": "wrong password"})
-			} else {
-				servePasswordForm(w, slug+"/info")
-			}
 		default:
 			writeError(w, http.StatusInternalServerError, "internal error")
 		}
 		return
 	}
-	// Close content immediately — Info only needs metadata, not file bytes.
-	result.Content.Close()
 
 	// Non-image files: redirect to direct download.
-	if !result.IsImage {
+	if !file.IsImage(f.MimeType) {
 		http.Redirect(w, r, "/"+slug, http.StatusFound)
 		return
 	}
@@ -354,14 +337,14 @@ func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
 	}
 	baseURL := scheme + "://" + r.Host
 	fileURL := baseURL + "/" + slug
-	filename := result.F.Filename
-	if filename == "" {
-		filename = slug
+	infoFilename := f.Filename
+	if infoFilename == "" {
+		infoFilename = slug
 	}
 
-	htmlEmbed := fmt.Sprintf(`<img src="%s" alt="%s">`, fileURL, filename)
+	htmlEmbed := fmt.Sprintf(`<img src="%s" alt="%s">`, fileURL, infoFilename)
 	bbcodeEmbed := fmt.Sprintf(`[img]%s[/img]`, fileURL)
-	markdownEmbed := fmt.Sprintf(`![%s](%s)`, filename, fileURL)
+	markdownEmbed := fmt.Sprintf(`![%s](%s)`, infoFilename, fileURL)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'")
@@ -384,9 +367,9 @@ code{display:block;background:#f4f4f4;padding:.5rem .75rem;border-radius:3px;fon
 <div class="embed-group"><label>Markdown</label><code>%s</code></div>
 <div class="embed-group"><label>Direct link</label><code>%s</code></div>
 </body></html>`,
-		filename,
-		filename,
-		slug, filename,
+		infoFilename,
+		infoFilename,
+		slug, infoFilename,
 		htmlEmbed,
 		bbcodeEmbed,
 		markdownEmbed,

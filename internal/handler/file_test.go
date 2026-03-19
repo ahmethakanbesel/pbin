@@ -20,9 +20,10 @@ import (
 // --- mock service ---
 
 type mockFileService struct {
-	uploadFn func(ctx context.Context, req file.UploadRequest) (file.UploadResult, error)
-	getFn    func(ctx context.Context, slug, password string) (file.GetResult, error)
-	deleteFn func(ctx context.Context, slug, secret string) error
+	uploadFn  func(ctx context.Context, req file.UploadRequest) (file.UploadResult, error)
+	getFn     func(ctx context.Context, slug, password string) (file.GetResult, error)
+	getMetaFn func(ctx context.Context, slug string) (file.File, error)
+	deleteFn  func(ctx context.Context, slug, secret string) error
 }
 
 func (m *mockFileService) Upload(ctx context.Context, req file.UploadRequest) (file.UploadResult, error) {
@@ -37,6 +38,13 @@ func (m *mockFileService) Get(ctx context.Context, slug, password string) (file.
 		return m.getFn(ctx, slug, password)
 	}
 	return file.GetResult{}, nil
+}
+
+func (m *mockFileService) GetMeta(ctx context.Context, slug string) (file.File, error) {
+	if m.getMetaFn != nil {
+		return m.getMetaFn(ctx, slug)
+	}
+	return file.File{}, nil
 }
 
 func (m *mockFileService) Delete(ctx context.Context, slug, secret string) error {
@@ -389,12 +397,8 @@ func TestDelete_NotFound(t *testing.T) {
 func TestInfo_ImageShowsEmbedCodes(t *testing.T) {
 	f := file.File{Slug: "abc123", Filename: "photo.png", MimeType: "image/png"}
 	svc := &mockFileService{
-		getFn: func(_ context.Context, slug, _ string) (file.GetResult, error) {
-			return file.GetResult{
-				F:       f,
-				Content: io.NopCloser(strings.NewReader("")),
-				IsImage: true,
-			}, nil
+		getMetaFn: func(_ context.Context, slug string) (file.File, error) {
+			return f, nil
 		},
 	}
 	h := handler.NewFileHandler(svc, 10*1024*1024)
@@ -420,12 +424,8 @@ func TestInfo_ImageShowsEmbedCodes(t *testing.T) {
 func TestInfo_NonImageRedirects(t *testing.T) {
 	f := file.File{Slug: "abc123", Filename: "doc.pdf", MimeType: "application/pdf"}
 	svc := &mockFileService{
-		getFn: func(_ context.Context, slug, _ string) (file.GetResult, error) {
-			return file.GetResult{
-				F:       f,
-				Content: io.NopCloser(strings.NewReader("")),
-				IsImage: false,
-			}, nil
+		getMetaFn: func(_ context.Context, slug string) (file.File, error) {
+			return f, nil
 		},
 	}
 	h := handler.NewFileHandler(svc, 10*1024*1024)
@@ -447,8 +447,8 @@ func TestInfo_NonImageRedirects(t *testing.T) {
 
 func TestInfo_NotFound(t *testing.T) {
 	svc := &mockFileService{
-		getFn: func(_ context.Context, slug, _ string) (file.GetResult, error) {
-			return file.GetResult{}, file.ErrNotFound
+		getMetaFn: func(_ context.Context, slug string) (file.File, error) {
+			return file.File{}, file.ErrNotFound
 		},
 	}
 	h := handler.NewFileHandler(svc, 10*1024*1024)
