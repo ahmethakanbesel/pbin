@@ -83,36 +83,36 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FILE-01 | — | Pending |
-| FILE-02 | — | Pending |
-| FILE-03 | — | Pending |
-| FILE-04 | — | Pending |
-| FILE-05 | — | Pending |
-| FILE-06 | — | Pending |
-| FILE-07 | — | Pending |
-| FILE-08 | — | Pending |
-| BUCK-01 | — | Pending |
-| BUCK-02 | — | Pending |
-| BUCK-03 | — | Pending |
-| BUCK-04 | — | Pending |
-| BUCK-05 | — | Pending |
-| PASTE-01 | — | Pending |
-| PASTE-02 | — | Pending |
-| PASTE-03 | — | Pending |
-| PASTE-04 | — | Pending |
-| PASTE-05 | — | Pending |
-| INFRA-01 | — | Pending |
-| INFRA-02 | — | Pending |
-| INFRA-03 | — | Pending |
-| INFRA-04 | — | Pending |
-| INFRA-05 | — | Pending |
-| INFRA-06 | — | Pending |
+| FILE-01 | Phase 2 | Pending |
+| FILE-02 | Phase 2 | Pending |
+| FILE-03 | Phase 2 | Pending |
+| FILE-04 | Phase 2 | Pending |
+| FILE-05 | Phase 2 | Pending |
+| FILE-06 | Phase 2 | Pending |
+| FILE-07 | Phase 2 | Pending |
+| FILE-08 | Phase 2 | Pending |
+| BUCK-01 | Phase 3 | Pending |
+| BUCK-02 | Phase 3 | Pending |
+| BUCK-03 | Phase 3 | Pending |
+| BUCK-04 | Phase 3 | Pending |
+| BUCK-05 | Phase 3 | Pending |
+| PASTE-01 | Phase 3 | Pending |
+| PASTE-02 | Phase 3 | Pending |
+| PASTE-03 | Phase 3 | Pending |
+| PASTE-04 | Phase 3 | Pending |
+| PASTE-05 | Phase 3 | Pending |
+| INFRA-01 | Phase 4 | Pending |
+| INFRA-02 | Phase 4 | Pending |
+| INFRA-03 | Phase 4 | Pending |
+| INFRA-04 | Phase 4 | Pending |
+| INFRA-05 | Phase 4 | Pending |
+| INFRA-06 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 24 total
-- Mapped to phases: 0
-- Unmapped: 24 ⚠️
+- Mapped to phases: 24
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-19 after initial definition*
+*Last updated: 2026-03-19 after roadmap creation*
