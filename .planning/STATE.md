@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03-05-PLAN.md
-last_updated: "2026-03-19T20:24:00.969Z"
+stopped_at: Completed 03-04-PLAN.md
+last_updated: "2026-03-19T20:24:42.020Z"
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -54,6 +54,7 @@ Plan: 1 of 6
 | Phase 03-buckets-and-paste P03 | 103s | 3 tasks | 3 files |
 | Phase 03-buckets-and-paste P02 | 2 | 3 tasks | 3 files |
 | Phase 03-buckets-and-paste P05 | 2min | 1 tasks | 1 files |
+| Phase 03-buckets-and-paste P04 | 2min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,9 @@ Recent decisions affecting current work:
 - [Phase 03-buckets-and-paste]: Each bucket file gets its own storageKey from slug.New (not bucket slug) — independent on-disk keys
 - [Phase 03-buckets-and-paste]: StreamZIP writes zip.NewWriter(w) directly to http.ResponseWriter — no bytes.Buffer, no Content-Length
 - [Phase 03-buckets-and-paste]: Per-request crypto/rand nonce applied to CSP header and inline script/style nonce attributes in paste view — isolates paste page CSP from file pages
+- [Phase 03-buckets-and-paste]: GetFile added to bucket.Service — finds file by StorageKey in bucket.Files then calls store.Read
+- [Phase 03-buckets-and-paste]: BucketHandler DownloadFile returns 401 JSON for wrong password (no password form — individual file downloads are API-like)
+- [Phase 03-buckets-and-paste]: Password forwarded via query param in per-file and ZIP links in View HTML so browsing preserves auth
 
 ### Pending Todos
 
@@ -106,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T20:24:00.966Z
-Stopped at: Completed 03-05-PLAN.md
+Last session: 2026-03-19T20:24:42.017Z
+Stopped at: Completed 03-04-PLAN.md
 Resume file: None
