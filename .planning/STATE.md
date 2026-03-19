@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-foundation-01-PLAN.md
-last_updated: "2026-03-19T17:08:46.692Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-19T17:20:00Z"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 1 of 3
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -63,6 +63,10 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: Config defaults via struct literal; koanf layered on top with Exists() guards (no Static provider exists)
 - [Phase 01-foundation]: Slug charset excludes ambiguous chars (0/O/1/l/I) for human readability
 - [Phase 01-foundation]: Env var transform: PBIN_SERVER_PORT -> server.port (strip prefix, lowercase, _ -> .)
+- [Phase 01-foundation]: Two-pool SQLite: WriteDB.SetMaxOpenConns(1) + ReadDB unbounded — prevents SQLITE_BUSY
+- [Phase 01-foundation]: goose.SetBaseFS(embed.FS) + goose.Up in Open() — migrations run automatically at startup
+- [Phase 01-foundation]: LocalFS keys must be ^[a-zA-Z0-9]+$ — path traversal prevention at key validation layer
+- [Phase 01-foundation]: Atomic file write via os.CreateTemp + os.Rename — prevents partial writes visible to readers
 
 ### Pending Todos
 
@@ -75,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T17:08:46.688Z
-Stopped at: Completed 01-foundation-01-PLAN.md
+Last session: 2026-03-19T17:20:00Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
