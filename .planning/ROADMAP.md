@@ -66,7 +66,15 @@ Plans:
   4. User creates a paste with optional title and language selection and receives a shareable URL with syntax highlighting rendered in the view
   5. User accesses `/raw/{id}` and receives the paste content as plain text (curl-friendly)
   6. User marks a paste as one-use; the second view attempt after the first successful read returns 410 Gone
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Migration 003: add delete_secret column to buckets and pastes tables
+- [ ] 03-02-PLAN.md — Bucket domain: extend entity, BucketService, bucketRepo (SQLite)
+- [ ] 03-03-PLAN.md — Paste domain: extend entity, PasteService, pasteRepo (SQLite)
+- [ ] 03-04-PLAN.md — BucketHandler: Upload, View, DownloadZIP, Delete
+- [ ] 03-05-PLAN.md — PasteHandler: Create, View (highlight.js), Raw, Delete
+- [ ] 03-06-PLAN.md — main.go wiring, slug dispatch, end-to-end human verification
 
 ### Phase 4: API, Web UI, and Delivery
 **Goal**: All operations are available through a consistent REST API, an embedded web UI covers upload forms and share/paste views for non-technical users, Basic Auth gates write endpoints, and a background worker automatically deletes expired records and their on-disk data.
@@ -89,5 +97,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-19 |
 | 2. File Sharing | 4/4 | Complete   | 2026-03-19 |
-| 3. Buckets and Paste | 0/TBD | Not started | - |
+| 3. Buckets and Paste | 0/6 | Not started | - |
 | 4. API, Web UI, and Delivery | 0/TBD | Not started | - |
