@@ -351,10 +351,24 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
     el.textContent = val;
     el.nextElementSibling.setAttribute('data-copy', val);
   }
+  function copyText(text){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(function(){fallbackCopy(text);});
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+  }
   function initCopyButtons(){
     document.querySelectorAll('[data-copy]').forEach(function(btn){
       btn.onclick = function(){
-        navigator.clipboard.writeText(btn.getAttribute('data-copy'));
+        copyText(btn.getAttribute('data-copy'));
         var orig = btn.textContent;
         btn.textContent = 'Copied!';
         setTimeout(function(){ btn.textContent = orig; }, 1500);
@@ -500,10 +514,24 @@ func (h *UIHandler) Paste(w http.ResponseWriter, r *http.Request) {
     el.querySelector('span').textContent = msg;
     el.classList.remove('hidden');
   }
+  function copyText(text){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(function(){fallbackCopy(text);});
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+  }
   function initCopyButtons(){
     document.querySelectorAll('[data-copy]').forEach(function(btn){
       btn.onclick = function(){
-        navigator.clipboard.writeText(btn.getAttribute('data-copy'));
+        copyText(btn.getAttribute('data-copy'));
         var orig = btn.textContent;
         btn.textContent = 'Copied!';
         setTimeout(function(){ btn.textContent = orig; }, 1500);

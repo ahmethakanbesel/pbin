@@ -398,9 +398,21 @@ func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
 </main>
 %s
 <script>
+function copyText(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).catch(function(){fallbackCopy(text);});
+  } else {fallbackCopy(text);}
+}
+function fallbackCopy(text){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta);
+}
 document.querySelectorAll('[data-copy]').forEach(function(btn){
   btn.addEventListener('click', function(){
-    navigator.clipboard.writeText(btn.getAttribute('data-copy'));
+    copyText(btn.getAttribute('data-copy'));
     var orig = btn.textContent;
     btn.textContent = 'Copied!';
     setTimeout(function(){ btn.textContent = orig; }, 1500);

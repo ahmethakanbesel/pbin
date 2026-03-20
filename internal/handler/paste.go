@@ -238,10 +238,22 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
       return '<span class="line">'+hljs.highlight(l,{language:code.className.replace('language-','').replace('hljs ','').split(' ')[0]||'plaintext',ignoreIllegals:true}).value+'</span>';
     }).join('\n');
   }
+  function copyText(text){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).catch(function(){fallbackCopy(text);});
+    } else {fallbackCopy(text);}
+  }
+  function fallbackCopy(text){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
+  }
   var copyBtn = document.getElementById('copy-btn');
   if(copyBtn){
     copyBtn.addEventListener('click', function(){
-      navigator.clipboard.writeText(document.querySelector('pre code').textContent);
+      copyText(document.querySelector('pre code').textContent);
       copyBtn.textContent = 'Copied!';
       setTimeout(function(){ copyBtn.textContent = 'Copy'; }, 1500);
     });
