@@ -116,7 +116,7 @@ func (s *Service) Upload(ctx context.Context, req UploadRequest) (UploadResult, 
 
 	return UploadResult{
 		Slug:      shareSlug,
-		URL:       s.baseURL + "/" + shareSlug,
+		URL:       s.baseURL + "/" + shareSlug + "/info",
 		DeleteURL: s.baseURL + "/delete/" + shareSlug + "/" + deleteSecret,
 		ExpiresAt: expiresAt,
 		IsImage:   IsImage(req.MimeType),
