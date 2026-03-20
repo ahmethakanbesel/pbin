@@ -201,8 +201,9 @@ func (h *PasteHandler) View(w http.ResponseWriter, r *http.Request) {
 .actions a,.actions button{padding:.3rem .7rem;font-size:.8rem;text-decoration:none;border:1px solid var(--pbin-surface-border);border-radius:var(--pbin-radius-sm);background:transparent;color:inherit;cursor:pointer;font-family:inherit;font-weight:500;transition:background .15s}
 .actions a:hover,.actions button:hover{background:var(--pbin-drop-hover-bg)}
 .code-wrap{position:relative}
-pre{margin:0;padding:0;border-radius:var(--pbin-radius-lg);overflow:auto;border:1px solid var(--pbin-surface-border);counter-reset:line}
-pre code.hljs{padding:1rem 1rem 1rem 3.5rem;display:block;line-height:1.6;white-space:pre}
+pre{margin:0;padding:0;border-radius:var(--pbin-radius-lg);overflow:auto;border:1px solid var(--pbin-surface-border);counter-reset:line;background:transparent !important}
+pre code.hljs{padding:1rem 1rem 1rem 3.5rem;display:block;line-height:1.6;white-space:pre;font-size:.875rem}
+code{background:transparent !important}
 pre code.hljs .line{display:block;position:relative}
 pre code.hljs .line::before{counter-increment:line;content:counter(line);position:absolute;left:-3rem;width:2.5rem;text-align:right;color:var(--pbin-muted);user-select:none;font-size:.85em}
 </style>
@@ -216,7 +217,7 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
   <span class="meta-item">%s</span>
   %s
   <div class="actions">
-    <button onclick="navigator.clipboard.writeText(document.querySelector('code').textContent);var b=this;b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},1500)">Copy</button>
+    <button id="copy-btn">Copy</button>
     <a href="/%s/raw">Raw</a>
   </div>
 </div>
@@ -238,6 +239,14 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
     }).join('\n');
   }
   hljs.highlightAll();
+  var copyBtn = document.getElementById('copy-btn');
+  if(copyBtn){
+    copyBtn.addEventListener('click', function(){
+      navigator.clipboard.writeText(document.querySelector('pre code').textContent);
+      copyBtn.textContent = 'Copied!';
+      setTimeout(function(){ copyBtn.textContent = 'Copy'; }, 1500);
+    });
+  }
 })();
 </script>
 </body>
