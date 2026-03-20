@@ -19,9 +19,7 @@ const (
 
 	// uiCSP is the Content-Security-Policy used on all three UI form pages.
 	// connect-src 'self' is required so the inline JS fetch calls to /api/* work.
-	uiCSPHome   = "default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://cdn.jsdelivr.net; form-action 'self'; connect-src 'self'"
-	uiCSPPaste  = "default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://cdn.jsdelivr.net; form-action 'self'; connect-src 'self'"
-	uiCSPBucket = "default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://cdn.jsdelivr.net; form-action 'self'; connect-src 'self'"
+	uiCSP = "default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://cdn.jsdelivr.net; form-action 'self'; connect-src 'self'"
 
 	expiryOpts = `<option value="10m">10 minutes</option>
       <option value="1h">1 hour</option>
@@ -125,25 +123,22 @@ main.container{padding-top:1rem;padding-bottom:2rem}
 // navBarHTML returns the nav bar with the active page marked.
 // activePage should be "file", "paste", or "bucket".
 func navBarHTML(activePage string) string {
-	fileAttr, pasteAttr, bucketAttr := "", "", ""
+	uploadAttr, pasteAttr := "", ""
 	switch activePage {
-	case "file":
-		fileAttr = ` aria-current="page"`
+	case "upload":
+		uploadAttr = ` aria-current="page"`
 	case "paste":
 		pasteAttr = ` aria-current="page"`
-	case "bucket":
-		bucketAttr = ` aria-current="page"`
 	}
 	return fmt.Sprintf(`<nav>
   <div class="nav-inner">
     <a class="brand" href="/">pbin</a>
     <ul class="nav-links">
-      <li><a href="/"%s>File</a></li>
+      <li><a href="/"%s>Upload</a></li>
       <li><a href="/paste"%s>Paste</a></li>
-      <li><a href="/bucket"%s>Bucket</a></li>
     </ul>
   </div>
-</nav>`, fileAttr, pasteAttr, bucketAttr)
+</nav>`, uploadAttr, pasteAttr)
 }
 
 // viewNavBarHTML returns the nav bar for view pages (no active page).
@@ -153,31 +148,32 @@ func viewNavBarHTML() string {
 
 const footerHTML = `<footer class="site-footer"><div class="container">pbin v1.0</div></footer>`
 
-// Home handles GET / — renders the file upload form.
+// Home handles GET / — renders the unified upload form.
+// Accepts one or multiple files. 1 file → file share, 2+ files → bucket.
 func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
 	securityHeaders(w)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", uiCSPHome)
+	w.Header().Set("Content-Security-Policy", uiCSP)
 
 	fmt.Fprintf(w, `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>pbin — File Upload</title>
+<title>pbin — Upload</title>
 <link rel="stylesheet" href="%s">
 %s
 </head>
 <body>
 %s
 <main class="container">
-<h2>Upload a File</h2>
+<h2>Upload Files</h2>
 <form id="upload-form">
   <div id="drop-zone">
     %s
-    <p>Drag &amp; drop a file here, or click to select</p>
-    <p class="drop-hint">Maximum one file per upload</p>
-    <input type="file" id="file-input" name="file" style="display:none">
+    <p>Drag &amp; drop files here, or click to select</p>
+    <p class="drop-hint">One file = shareable link &middot; Multiple files = download bundle</p>
+    <input type="file" id="file-input" name="file" multiple style="display:none">
   </div>
   <div id="file-list"></div>
   <div class="form-controls">
@@ -189,13 +185,14 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
     </label>
     <label class="full-width">
       <input type="checkbox" id="one-use" name="one_use" value="1">
-      One-use (file disappears after first download)
+      One-use (disappears after first download)
     </label>
   </div>
   <button type="submit">Upload</button>
 </form>
 <div id="result" class="result-card hidden">
-  <p class="result-title">%sFile uploaded!</p>
+  <p class="result-title">%s<span id="result-heading">Uploaded!</span></p>
+  <div class="result-meta" id="file-count-info" style="display:none"></div>
   <div class="url-group">
     <div class="url-label">Share URL</div>
     <div class="url-row"><code id="share-url"></code><button data-copy="">Copy</button></div>
@@ -218,6 +215,7 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
   var dropZone = document.getElementById('drop-zone');
   var fileInput = document.getElementById('file-input');
   var fileList = document.getElementById('file-list');
+  var selectedFiles = [];
 
   dropZone.addEventListener('click', function(){ fileInput.click(); });
   dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('over'); });
@@ -225,17 +223,29 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
   dropZone.addEventListener('drop', function(e){
     e.preventDefault();
     dropZone.classList.remove('over');
-    var files = e.dataTransfer.files;
-    if(files.length > 0){
-      fileInput.files = files;
-      showFileInfo(files[0]);
-    }
+    selectedFiles = Array.from(e.dataTransfer.files);
+    renderFileList();
   });
-  fileInput.addEventListener('change', function(){ if(fileInput.files.length>0) showFileInfo(fileInput.files[0]); });
+  fileInput.addEventListener('change', function(){
+    selectedFiles = Array.from(fileInput.files);
+    renderFileList();
+  });
 
-  function showFileInfo(f){
-    fileList.innerHTML = '<div class="file-item"><span class="file-name">'+escapeHtml(f.name)+'</span><span class="file-size">'+humanSize(f.size)+'</span></div>';
+  function renderFileList(){
+    if(selectedFiles.length === 0){ fileList.innerHTML = ''; return; }
+    var html = '';
+    selectedFiles.forEach(function(f, i){
+      html += '<div class="file-item"><span class="file-name">'+escapeHtml(f.name)+'</span><span class="file-size">'+humanSize(f.size)+'</span><button class="file-remove" data-idx="'+i+'" type="button">&times;</button></div>';
+    });
+    fileList.innerHTML = html;
+    fileList.querySelectorAll('.file-remove').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        selectedFiles.splice(parseInt(btn.getAttribute('data-idx')),1);
+        renderFileList();
+      });
+    });
   }
+
   function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   function humanSize(n){
     if(n>=1073741824) return (n/1073741824).toFixed(1)+' GB';
@@ -247,12 +257,18 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
   document.getElementById('upload-form').addEventListener('submit', function(e){
     e.preventDefault();
     var form = e.target;
-    if(!fileInput.files || fileInput.files.length === 0){
-      showError('Please select a file.');
+    if(selectedFiles.length === 0){
+      showError('Please select at least one file.');
       return;
     }
+
+    var isBucket = selectedFiles.length > 1;
     var fd = new FormData();
-    fd.append('file', fileInput.files[0]);
+    if(isBucket){
+      selectedFiles.forEach(function(f){ fd.append('file', f); });
+    } else {
+      fd.append('file', selectedFiles[0]);
+    }
     fd.append('expiry', form.expiry.value);
     fd.append('password', form.password.value);
     fd.append('one_use', form['one_use'].checked ? '1' : '0');
@@ -261,13 +277,14 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
     btn.setAttribute('aria-busy','true');
     btn.disabled = true;
 
-    fetch('/api/upload', {method:'POST', body: fd})
+    var url = isBucket ? '/api/upload?type=bucket' : '/api/upload';
+    fetch(url, {method:'POST', body: fd})
       .then(function(resp){ return resp.json().then(function(data){ return {status: resp.status, data: data}; }); })
       .then(function(r){
         btn.removeAttribute('aria-busy');
         btn.disabled = false;
         if(r.status === 201){
-          showResult(r.data);
+          showResult(r.data, isBucket);
         } else {
           showError(r.data.error || 'Upload failed.');
         }
@@ -279,8 +296,11 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
       });
   });
 
-  function showResult(data){
+  function showResult(data, isBucket){
     document.getElementById('error-msg').classList.add('hidden');
+    document.getElementById('result-heading').textContent = isBucket
+      ? 'Bucket uploaded!'
+      : 'File uploaded!';
     var shareEl = document.getElementById('share-url');
     var deleteEl = document.getElementById('delete-url');
     shareEl.textContent = data.url;
@@ -288,13 +308,24 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
     deleteEl.textContent = data.delete_url;
     deleteEl.nextElementSibling.setAttribute('data-copy', data.delete_url);
     document.getElementById('expiry-info').textContent = data.expires_at ? 'Expires: ' + data.expires_at : 'Never expires';
-    // Show embed link for images
-    if(data.is_image){
+    // Bucket: show file count
+    var countEl = document.getElementById('file-count-info');
+    if(isBucket && data.file_count){
+      countEl.textContent = data.file_count + ' file(s) uploaded';
+      countEl.style.display = '';
+    } else {
+      countEl.style.display = 'none';
+    }
+    // Single file image: show embed link
+    var embedGroup = document.getElementById('embed-group');
+    if(!isBucket && data.is_image){
       var embedEl = document.getElementById('embed-url');
       var embedURL = data.url + '/info';
       embedEl.textContent = embedURL;
       embedEl.nextElementSibling.setAttribute('data-copy', embedURL);
-      document.getElementById('embed-group').style.display = '';
+      embedGroup.style.display = '';
+    } else {
+      embedGroup.style.display = 'none';
     }
     document.getElementById('result').classList.remove('hidden');
     initCopyButtons();
@@ -318,14 +349,14 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
 })();
 </script>
 </body>
-</html>`, picoCSS, customCSS, navBarHTML("file"), uploadIcon, expiryOpts, checkIcon, footerHTML)
+</html>`, picoCSS, customCSS, navBarHTML("upload"), uploadIcon, expiryOpts, checkIcon, footerHTML)
 }
 
 // Paste handles GET /paste — renders the paste creation form.
 func (h *UIHandler) Paste(w http.ResponseWriter, r *http.Request) {
 	securityHeaders(w)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", uiCSPPaste)
+	w.Header().Set("Content-Security-Policy", uiCSP)
 
 	fmt.Fprintf(w, `<!DOCTYPE html>
 <html lang="en">
@@ -471,177 +502,7 @@ func (h *UIHandler) Paste(w http.ResponseWriter, r *http.Request) {
 </html>`, picoCSS, customCSS, navBarHTML("paste"), expiryOpts, checkIcon, footerHTML)
 }
 
-// Bucket handles GET /bucket — renders the multi-file bucket upload form.
+// Bucket handles GET /bucket — redirects to / (unified upload page).
 func (h *UIHandler) Bucket(w http.ResponseWriter, r *http.Request) {
-	securityHeaders(w)
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", uiCSPBucket)
-
-	fmt.Fprintf(w, `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>pbin — Bucket Upload</title>
-<link rel="stylesheet" href="%s">
-%s
-</head>
-<body>
-%s
-<main class="container">
-<h2>Upload a Bucket</h2>
-<p style="color:var(--pbin-muted);margin-top:-.5rem">Upload multiple files as a shareable bundle.</p>
-<form id="bucket-form">
-  <div id="drop-zone">
-    %s
-    <p>Drag &amp; drop files here, or click to select</p>
-    <p class="drop-hint">Multiple files allowed</p>
-    <input type="file" id="file-input" name="file" multiple style="display:none">
-  </div>
-  <div id="file-list"></div>
-  <div class="form-controls">
-    <label for="bucket-expiry">Expiry
-      <select id="bucket-expiry" name="expiry">%s</select>
-    </label>
-    <label for="bucket-password">Password (optional)
-      <input type="password" id="bucket-password" name="password" placeholder="Leave blank for no password">
-    </label>
-    <label class="full-width">
-      <input type="checkbox" id="bucket-one-use" name="one_use" value="1">
-      One-use (bucket disappears after first download)
-    </label>
-  </div>
-  <button type="submit">Upload Bucket</button>
-</form>
-<div id="result" class="result-card hidden">
-  <p class="result-title">%sBucket uploaded!</p>
-  <div class="result-meta" id="file-count-info" style="margin-top:0;margin-bottom:.75rem"></div>
-  <div class="url-group">
-    <div class="url-label">Share URL</div>
-    <div class="url-row"><code id="share-url"></code><button data-copy="">Copy</button></div>
-  </div>
-  <div class="url-group">
-    <div class="url-label">Delete URL</div>
-    <div class="url-row"><code id="delete-url"></code><button data-copy="">Copy</button></div>
-  </div>
-  <div class="result-meta" id="expiry-info"></div>
-</div>
-<div id="error-msg" class="error-banner hidden"><span></span><button class="error-dismiss" onclick="this.parentElement.classList.add('hidden')">&times;</button></div>
-</main>
-%s
-<script>
-(function(){
-  var dropZone = document.getElementById('drop-zone');
-  var fileInput = document.getElementById('file-input');
-  var fileList = document.getElementById('file-list');
-  var selectedFiles = [];
-
-  dropZone.addEventListener('click', function(){ fileInput.click(); });
-  dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('over'); });
-  dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('over'); });
-  dropZone.addEventListener('drop', function(e){
-    e.preventDefault();
-    dropZone.classList.remove('over');
-    selectedFiles = Array.from(e.dataTransfer.files);
-    renderFileList();
-  });
-  fileInput.addEventListener('change', function(){
-    selectedFiles = Array.from(fileInput.files);
-    renderFileList();
-  });
-
-  function renderFileList(){
-    if(selectedFiles.length === 0){ fileList.innerHTML = ''; return; }
-    var html = '';
-    selectedFiles.forEach(function(f, i){
-      html += '<div class="file-item"><span class="file-name">'+escapeHtml(f.name)+'</span><span class="file-size">'+humanSize(f.size)+'</span><button class="file-remove" data-idx="'+i+'" type="button">&times;</button></div>';
-    });
-    fileList.innerHTML = html;
-    fileList.querySelectorAll('.file-remove').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        selectedFiles.splice(parseInt(btn.getAttribute('data-idx')),1);
-        renderFileList();
-      });
-    });
-  }
-
-  function escapeHtml(s){
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function humanSize(n){
-    if(n >= 1073741824) return (n/1073741824).toFixed(1)+' GB';
-    if(n >= 1048576) return (n/1048576).toFixed(1)+' MB';
-    if(n >= 1024) return (n/1024).toFixed(1)+' KB';
-    return n+' B';
-  }
-
-  document.getElementById('bucket-form').addEventListener('submit', function(e){
-    e.preventDefault();
-    var form = e.target;
-    if(selectedFiles.length === 0){
-      showError('Please select at least one file.');
-      return;
-    }
-    var fd = new FormData();
-    selectedFiles.forEach(function(f){ fd.append('file', f); });
-    fd.append('expiry', form.expiry.value);
-    fd.append('password', form.password.value);
-    fd.append('one_use', form['one_use'].checked ? '1' : '0');
-
-    var btn = form.querySelector('button[type=submit]');
-    btn.setAttribute('aria-busy','true');
-    btn.disabled = true;
-
-    fetch('/api/upload?type=bucket', {method:'POST', body: fd})
-      .then(function(resp){ return resp.json().then(function(data){ return {status: resp.status, data: data}; }); })
-      .then(function(r){
-        btn.removeAttribute('aria-busy');
-        btn.disabled = false;
-        if(r.status === 201){
-          showResult(r.data);
-        } else {
-          showError(r.data.error || 'Bucket upload failed.');
-        }
-      })
-      .catch(function(){
-        btn.removeAttribute('aria-busy');
-        btn.disabled = false;
-        showError('Network error. Please try again.');
-      });
-  });
-
-  function showResult(data){
-    document.getElementById('error-msg').classList.add('hidden');
-    var shareEl = document.getElementById('share-url');
-    var deleteEl = document.getElementById('delete-url');
-    shareEl.textContent = data.url;
-    shareEl.nextElementSibling.setAttribute('data-copy', data.url);
-    deleteEl.textContent = data.delete_url;
-    deleteEl.nextElementSibling.setAttribute('data-copy', data.delete_url);
-    document.getElementById('expiry-info').textContent = data.expires_at ? 'Expires: ' + data.expires_at : 'Never expires';
-    document.getElementById('file-count-info').textContent = data.file_count + ' file(s) uploaded';
-    document.getElementById('result').classList.remove('hidden');
-    initCopyButtons();
-  }
-  function showError(msg){
-    document.getElementById('result').classList.add('hidden');
-    var el = document.getElementById('error-msg');
-    el.querySelector('span').textContent = msg;
-    el.classList.remove('hidden');
-  }
-  function initCopyButtons(){
-    document.querySelectorAll('[data-copy]').forEach(function(btn){
-      btn.onclick = function(){
-        navigator.clipboard.writeText(btn.getAttribute('data-copy'));
-        var orig = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(function(){ btn.textContent = orig; }, 1500);
-      };
-    });
-  }
-})();
-</script>
-</body>
-</html>`, picoCSS, customCSS, navBarHTML("bucket"), uploadIcon, expiryOpts, checkIcon, footerHTML)
+	http.Redirect(w, r, "/", http.StatusMovedPermanently)
 }
