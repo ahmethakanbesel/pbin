@@ -147,9 +147,9 @@ func (h *PasteHandler) View(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// CSP: allow highlight.js CDN for script and style, inline script/style via nonce.
+	// CSP: allow highlight.js CDN for script and style, Pico CSS from jsdelivr, inline script/style via nonce.
 	csp := fmt.Sprintf(
-		"default-src 'none'; script-src 'nonce-%s' https://cdnjs.cloudflare.com; style-src 'nonce-%s' https://cdnjs.cloudflare.com; img-src 'none'",
+		"default-src 'none'; script-src 'nonce-%s' https://cdnjs.cloudflare.com; style-src 'nonce-%s' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'none'",
 		nonce, nonce,
 	)
 	w.Header().Set("Content-Security-Policy", csp)
@@ -173,7 +173,7 @@ func (h *PasteHandler) View(w http.ResponseWriter, r *http.Request) {
 
 	titleHTML := ""
 	if title != "" {
-		titleHTML = fmt.Sprintf(`<h1 class="paste-title">%s</h1>`, html.EscapeString(title))
+		titleHTML = fmt.Sprintf(`<h2 style="margin-bottom:.5rem">%s</h2>`, html.EscapeString(title))
 	}
 
 	// HTML-escape paste content to prevent XSS.
@@ -185,48 +185,46 @@ func (h *PasteHandler) View(w http.ResponseWriter, r *http.Request) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>%s — pbin</title>
+<link rel="stylesheet" href="%s">
 <link rel="stylesheet" media="(prefers-color-scheme: light)"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
 <link rel="stylesheet" media="(prefers-color-scheme: dark)"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css">
+%s
 <style nonce="%s">
-*{box-sizing:border-box}
-body{font-family:system-ui,sans-serif;margin:0;padding:1rem 2rem;background:#fff;color:#24292e}
-@media(prefers-color-scheme:dark){body{background:#282c34;color:#abb2bf}}
-.paste-title{font-size:1.4rem;margin:0 0 .5rem}
-.meta-bar{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;font-size:.85rem;color:#586069;margin-bottom:.75rem;padding:.5rem .75rem;background:#f6f8fa;border-radius:4px;border:1px solid #e1e4e8}
-@media(prefers-color-scheme:dark){.meta-bar{background:#21252b;color:#9da5b4;border-color:#3e4451}}
+.meta-bar{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;font-size:.85rem;color:var(--pbin-muted);margin-bottom:.75rem;padding:.6rem 1rem;background:var(--pbin-surface);border-radius:var(--pbin-radius-md);border:1px solid var(--pbin-surface-border)}
 .meta-item{white-space:nowrap}
 .meta-lang{font-weight:600;text-transform:uppercase;font-size:.75rem;letter-spacing:.05em}
 .meta-oneuse{color:#d73a49;font-weight:600}
 @media(prefers-color-scheme:dark){.meta-oneuse{color:#e06c75}}
 .actions{display:flex;gap:.5rem;margin-left:auto}
-.actions a,.actions button{padding:.25rem .6rem;font-size:.8rem;text-decoration:none;border:1px solid #d1d5da;border-radius:3px;background:#fafbfc;color:#24292e;cursor:pointer;font-family:inherit}
-@media(prefers-color-scheme:dark){.actions a,.actions button{border-color:#3e4451;background:#2c313a;color:#abb2bf}}
-.actions a:hover,.actions button:hover{background:#f3f4f6}
-@media(prefers-color-scheme:dark){.actions a:hover,.actions button:hover{background:#353b45}}
+.actions a,.actions button{padding:.3rem .7rem;font-size:.8rem;text-decoration:none;border:1px solid var(--pbin-surface-border);border-radius:var(--pbin-radius-sm);background:transparent;color:inherit;cursor:pointer;font-family:inherit;font-weight:500;transition:background .15s}
+.actions a:hover,.actions button:hover{background:var(--pbin-drop-hover-bg)}
 .code-wrap{position:relative}
-pre{margin:0;padding:0;border-radius:6px;overflow:auto;border:1px solid #e1e4e8;counter-reset:line}
-@media(prefers-color-scheme:dark){pre{border-color:#3e4451}}
+pre{margin:0;padding:0;border-radius:var(--pbin-radius-lg);overflow:auto;border:1px solid var(--pbin-surface-border);counter-reset:line}
 pre code.hljs{padding:1rem 1rem 1rem 3.5rem;display:block;line-height:1.6;white-space:pre}
 pre code.hljs .line{display:block;position:relative}
-pre code.hljs .line::before{counter-increment:line;content:counter(line);position:absolute;left:-3rem;width:2.5rem;text-align:right;color:#aaa;user-select:none;font-size:.85em}
+pre code.hljs .line::before{counter-increment:line;content:counter(line);position:absolute;left:-3rem;width:2.5rem;text-align:right;color:var(--pbin-muted);user-select:none;font-size:.85em}
 </style>
 </head>
 <body>
+%s
+<main>
 %s
 <div class="meta-bar">
   <span class="meta-item meta-lang">%s</span>
   <span class="meta-item">%s</span>
   %s
   <div class="actions">
-    <button onclick="navigator.clipboard.writeText(document.querySelector('code').textContent)">Copy</button>
+    <button onclick="navigator.clipboard.writeText(document.querySelector('code').textContent);var b=this;b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},1500)">Copy</button>
     <a href="/%s/raw">Raw</a>
   </div>
 </div>
 <div class="code-wrap">
 <pre><code class="language-%s">%s</code></pre>
 </div>
+</main>
+%s
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script nonce="%s">
 (function(){
@@ -250,7 +248,10 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
 			}
 			return slug
 		}()),
+		picoCSS,
+		customCSS,
 		nonce,
+		viewNavBarHTML(),
 		titleHTML,
 		html.EscapeString(lang),
 		html.EscapeString(expiryInfo),
@@ -258,6 +259,7 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
 		html.EscapeString(slug),
 		html.EscapeString(lang),
 		escapedContent,
+		footerHTML,
 		nonce,
 	)
 }

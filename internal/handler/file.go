@@ -211,26 +211,45 @@ func (h *FileHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, result.Content)
 }
 
-// servePasswordForm writes a minimal HTML password prompt.
+// servePasswordForm writes a styled HTML password prompt consistent with the app design.
 func servePasswordForm(w http.ResponseWriter, slug string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline' https://cdn.jsdelivr.net; form-action 'self'")
 	w.WriteHeader(http.StatusUnauthorized)
 	fmt.Fprintf(w, `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>Password Required</title>
-<style>body{font-family:sans-serif;max-width:400px;margin:4rem auto;padding:1rem}
-input{display:block;width:100%%;padding:.5rem;margin:.5rem 0}
-button{padding:.5rem 1rem}</style></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Password Required — pbin</title>
+<link rel="stylesheet" href="%s">
+%s
+<style>
+.pw-card{max-width:420px;margin:3rem auto;padding:2rem;background:var(--pbin-surface);border:1px solid var(--pbin-surface-border);border-radius:var(--pbin-radius-lg)}
+.pw-card h2{margin-top:0;font-size:1.25rem}
+.pw-card p{color:var(--pbin-muted);font-size:.9rem}
+.pw-icon{display:block;margin:0 auto 1rem;text-align:center;color:var(--pbin-muted)}
+.pw-icon svg{width:40px;height:40px}
+</style>
+</head>
 <body>
-<h2>Password Required</h2>
-<p>This file is password protected.</p>
-<form method="GET" action="/%s">
-  <label for="pw">Password</label>
-  <input id="pw" type="password" name="password" required autofocus>
-  <button type="submit">Download</button>
-</form>
-</body></html>`, slug)
+%s
+<main>
+<div class="pw-card">
+  <div class="pw-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg></div>
+  <h2>Password Required</h2>
+  <p>This content is password protected. Enter the password to continue.</p>
+  <form method="GET" action="/%s">
+    <label for="pw">Password
+      <input id="pw" type="password" name="password" required autofocus placeholder="Enter password">
+    </label>
+    <button type="submit">Continue</button>
+  </form>
+</div>
+</main>
+%s
+</body>
+</html>`, picoCSS, customCSS, viewNavBarHTML(), slug, footerHTML)
 }
 
 // deleteResponse is the JSON shape returned after a successful deletion.
@@ -347,32 +366,58 @@ func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
 	markdownEmbed := fmt.Sprintf(`![%s](%s)`, infoFilename, fileURL)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'unsafe-inline'")
 	fmt.Fprintf(w, `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>%s — pbin</title>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>%s — pbin</title>
+<link rel="stylesheet" href="%s">
+%s
 <style>
-body{font-family:sans-serif;max-width:700px;margin:2rem auto;padding:1rem}
-img{max-width:100%%;border:1px solid #ddd;border-radius:4px;margin-bottom:1.5rem}
-h1{font-size:1.2rem;margin-bottom:1rem}
+.preview-img{max-width:100%%;border:1px solid var(--pbin-surface-border);border-radius:var(--pbin-radius-lg);margin-bottom:1.5rem}
 .embed-group{margin-bottom:1rem}
-label{display:block;font-size:.85rem;font-weight:bold;margin-bottom:.25rem;color:#555}
-code{display:block;background:#f4f4f4;padding:.5rem .75rem;border-radius:3px;font-size:.9rem;word-break:break-all;user-select:all}
-</style></head>
+.embed-group .embed-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--pbin-muted);margin-bottom:.35rem}
+.embed-group .embed-row{display:flex;align-items:center;gap:.5rem}
+.embed-group code{flex:1;display:block;background:var(--pbin-surface);border:1px solid var(--pbin-surface-border);padding:.5rem .75rem;border-radius:var(--pbin-radius-sm);font-size:.85rem;word-break:break-all;font-family:ui-monospace,monospace;cursor:pointer}
+.embed-group button[data-copy]{font-size:.75rem;padding:.35rem .7rem;border-radius:var(--pbin-radius-sm);border:1px solid var(--pbin-surface-border);background:var(--pbin-surface);cursor:pointer;white-space:nowrap;font-weight:500;transition:background .15s;color:inherit}
+.embed-group button[data-copy]:hover{background:var(--pbin-drop-hover-bg)}
+</style>
+</head>
 <body>
-<h1>%s</h1>
-<img src="/%s" alt="%s">
-<div class="embed-group"><label>HTML</label><code>%s</code></div>
-<div class="embed-group"><label>BBCode</label><code>%s</code></div>
-<div class="embed-group"><label>Markdown</label><code>%s</code></div>
-<div class="embed-group"><label>Direct link</label><code>%s</code></div>
-</body></html>`,
+%s
+<main>
+<h2>%s</h2>
+<img class="preview-img" src="/%s" alt="%s">
+<div class="embed-group"><div class="embed-label">HTML</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>
+<div class="embed-group"><div class="embed-label">BBCode</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>
+<div class="embed-group"><div class="embed-label">Markdown</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>
+<div class="embed-group"><div class="embed-label">Direct Link</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>
+</main>
+%s
+<script>
+document.querySelectorAll('[data-copy]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    navigator.clipboard.writeText(btn.getAttribute('data-copy'));
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = orig; }, 1500);
+  });
+});
+</script>
+</body>
+</html>`,
 		infoFilename,
+		picoCSS,
+		customCSS,
+		viewNavBarHTML(),
 		infoFilename,
 		slug, infoFilename,
-		htmlEmbed,
-		bbcodeEmbed,
-		markdownEmbed,
-		fileURL,
+		htmlEmbed, htmlEmbed,
+		bbcodeEmbed, bbcodeEmbed,
+		markdownEmbed, markdownEmbed,
+		fileURL, fileURL,
+		footerHTML,
 	)
 }

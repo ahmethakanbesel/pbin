@@ -179,14 +179,14 @@ func (h *BucketHandler) View(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline' https://cdn.jsdelivr.net; form-action 'self'")
 
 	b := result.B
 
 	// Build expiry info string.
-	expiryInfo := "never expires"
+	expiryInfo := "Never expires"
 	if result.ExpiresAt != nil {
-		expiryInfo = "expires " + result.ExpiresAt.UTC().Format("2006-01-02 15:04 UTC")
+		expiryInfo = "Expires " + result.ExpiresAt.UTC().Format("2006-01-02 15:04 UTC")
 	}
 
 	// Build per-file rows.
@@ -201,9 +201,7 @@ func (h *BucketHandler) View(w http.ResponseWriter, r *http.Request) {
 	for _, bf := range b.Files {
 		fileURL := fmt.Sprintf("/b/%s/file/%s%s", slug, bf.StorageKey, passwordQuery)
 		fileRows += fmt.Sprintf(
-			`<tr><td><a href="%s" download="%s">%s</a></td><td>%s</td><td><a href="%s" download="%s" class="btn-dl">Download</a></td></tr>`,
-			fileURL,
-			htmlEscape(bf.Filename),
+			`<tr><td>%s</td><td class="size-cell">%s</td><td class="action-cell"><a href="%s" download="%s">Download</a></td></tr>`,
 			htmlEscape(bf.Filename),
 			humanSize(bf.Size),
 			fileURL,
@@ -213,37 +211,53 @@ func (h *BucketHandler) View(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title>%s — pbin</title>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bucket %s — pbin</title>
+<link rel="stylesheet" href="%s">
+%s
 <style>
-body{font-family:sans-serif;max-width:700px;margin:2rem auto;padding:1rem;color:#222}
-h1{font-size:1.4rem;margin-bottom:.5rem}
-.meta{font-size:.85rem;color:#666;margin-bottom:1.5rem}
+.bucket-meta{display:flex;align-items:center;gap:1rem;padding:.6rem 1rem;background:var(--pbin-surface);border:1px solid var(--pbin-surface-border);border-radius:var(--pbin-radius-md);font-size:.85rem;color:var(--pbin-muted);margin-bottom:1.5rem}
+.bucket-meta .meta-sep{width:1px;height:1rem;background:var(--pbin-surface-border)}
 table{width:100%%;border-collapse:collapse;margin-bottom:1.5rem}
-th{text-align:left;font-size:.85rem;color:#555;border-bottom:2px solid #ddd;padding:.4rem .5rem}
-td{padding:.5rem .5rem;border-bottom:1px solid #eee;font-size:.9rem;word-break:break-all}
-td:last-child{white-space:nowrap;text-align:right}
-a{color:#0066cc;text-decoration:none}
-a:hover{text-decoration:underline}
-.btn-dl{font-size:.8rem;background:#0066cc;color:#fff;padding:.2rem .6rem;border-radius:3px}
-.btn-dl:hover{background:#0052a3;text-decoration:none}
-.btn-zip{display:inline-block;background:#28a745;color:#fff;padding:.6rem 1.2rem;border-radius:4px;font-size:1rem;margin-top:.5rem}
-.btn-zip:hover{background:#1e7e34;text-decoration:none}
-</style></head>
+thead th{text-align:left;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--pbin-muted);padding:.6rem .75rem;border-bottom:2px solid var(--pbin-surface-border)}
+tbody td{padding:.65rem .75rem;border-bottom:1px solid var(--pbin-surface-border);font-size:.9rem;word-break:break-all}
+.size-cell{white-space:nowrap;color:var(--pbin-muted);width:100px}
+.action-cell{white-space:nowrap;text-align:right;width:100px}
+.action-cell a{font-size:.8rem;font-weight:500;text-decoration:none}
+.btn-zip{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.5rem;border-radius:var(--pbin-radius-md);font-size:.95rem;font-weight:500;text-decoration:none;cursor:pointer}
+.btn-zip svg{width:18px;height:18px}
+</style>
+</head>
 <body>
-<h1>%s</h1>
-<div class="meta">%d file(s) &mdash; %s</div>
+%s
+<main>
+<h2>Bucket <code style="font-size:.85em">%s</code></h2>
+<div class="bucket-meta">
+  <span>%d file(s)</span>
+  <span class="meta-sep"></span>
+  <span>%s</span>
+</div>
 <table>
 <thead><tr><th>Filename</th><th>Size</th><th></th></tr></thead>
 <tbody>%s</tbody>
 </table>
-<a href="%s" class="btn-zip">Download all as ZIP</a>
-</body></html>`,
+<a href="%s" class="btn-zip contrast" role="button"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Download all as ZIP</a>
+</main>
+%s
+</body>
+</html>`,
 		slug,
+		picoCSS,
+		customCSS,
+		viewNavBarHTML(),
 		slug,
 		len(b.Files),
 		expiryInfo,
 		fileRows,
 		zipURL,
+		footerHTML,
 	)
 }
 
