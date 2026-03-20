@@ -69,13 +69,20 @@ const (
   --pbin-surface: #1e293b;
   --pbin-surface-border: #334155;
 }}
-nav {display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;margin-bottom:1.5rem;border-bottom:1px solid var(--pbin-surface-border)}
+body{margin:0;padding:0}
+.container{max-width:720px;margin:0 auto;padding:0 1.25rem}
+@media(min-width:1024px){.container{max-width:800px}}
+@media(max-width:600px){.container{padding:0 1rem}.form-controls{grid-template-columns:1fr}}
+nav{padding:.75rem 0;margin-bottom:1.5rem;border-bottom:1px solid var(--pbin-surface-border)}
+nav .nav-inner{display:flex;justify-content:space-between;align-items:center;max-width:720px;margin:0 auto;padding:0 1.25rem}
+@media(min-width:1024px){nav .nav-inner{max-width:800px}}
 nav .brand{font-size:1.25rem;font-weight:700;text-decoration:none;color:inherit;letter-spacing:-.02em}
 nav .nav-links{display:flex;gap:.25rem;list-style:none;margin:0;padding:0}
 nav .nav-links a{padding:.4rem .85rem;border-radius:var(--pbin-radius-md);text-decoration:none;font-size:.9rem;font-weight:500;color:var(--pbin-muted);transition:background .15s,color .15s}
 nav .nav-links a:hover{background:var(--pbin-surface);color:inherit}
 nav .nav-links a[aria-current="page"]{background:var(--pbin-surface);color:inherit;font-weight:600}
 footer.site-footer{margin-top:3rem;padding:1.5rem 0;border-top:1px solid var(--pbin-surface-border);text-align:center;font-size:.8rem;color:var(--pbin-muted)}
+main.container{padding-top:1rem;padding-bottom:2rem}
 #drop-zone{border:2px dashed var(--pbin-drop-border);border-radius:var(--pbin-radius-lg);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
 #drop-zone:hover{border-color:var(--pbin-drop-hover-border)}
 #drop-zone.over{border-style:solid;border-color:var(--pbin-drop-hover-border);background:var(--pbin-drop-hover-bg)}
@@ -128,12 +135,14 @@ func navBarHTML(activePage string) string {
 		bucketAttr = ` aria-current="page"`
 	}
 	return fmt.Sprintf(`<nav>
-  <a class="brand" href="/">pbin</a>
-  <ul class="nav-links">
-    <li><a href="/"%s>File</a></li>
-    <li><a href="/paste"%s>Paste</a></li>
-    <li><a href="/bucket"%s>Bucket</a></li>
-  </ul>
+  <div class="nav-inner">
+    <a class="brand" href="/">pbin</a>
+    <ul class="nav-links">
+      <li><a href="/"%s>File</a></li>
+      <li><a href="/paste"%s>Paste</a></li>
+      <li><a href="/bucket"%s>Bucket</a></li>
+    </ul>
+  </div>
 </nav>`, fileAttr, pasteAttr, bucketAttr)
 }
 
@@ -142,7 +151,7 @@ func viewNavBarHTML() string {
 	return navBarHTML("")
 }
 
-const footerHTML = `<footer class="site-footer">pbin v1.0</footer>`
+const footerHTML = `<footer class="site-footer"><div class="container">pbin v1.0</div></footer>`
 
 // Home handles GET / — renders the file upload form.
 func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
@@ -161,7 +170,7 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
 </head>
 <body>
 %s
-<main>
+<main class="container">
 <h2>Upload a File</h2>
 <form id="upload-form">
   <div id="drop-zone">
@@ -332,7 +341,7 @@ func (h *UIHandler) Paste(w http.ResponseWriter, r *http.Request) {
 </head>
 <body>
 %s
-<main>
+<main class="container">
 <h2>Create a Paste</h2>
 <form id="paste-form">
   <textarea id="content" name="content" rows="20" required placeholder="Paste your text here..."></textarea>
@@ -479,7 +488,7 @@ func (h *UIHandler) Bucket(w http.ResponseWriter, r *http.Request) {
 </head>
 <body>
 %s
-<main>
+<main class="container">
 <h2>Upload a Bucket</h2>
 <p style="color:var(--pbin-muted);margin-top:-.5rem">Upload multiple files as a shareable bundle.</p>
 <form id="bucket-form">

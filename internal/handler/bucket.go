@@ -232,7 +232,7 @@ tbody td{padding:.65rem .75rem;border-bottom:1px solid var(--pbin-surface-border
 </head>
 <body>
 %s
-<main>
+<main class="container">
 <h2>Bucket <code style="font-size:.85em">%s</code></h2>
 <div class="bucket-meta">
   <span>%d file(s)</span>

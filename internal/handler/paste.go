@@ -209,7 +209,7 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
 </head>
 <body>
 %s
-<main>
+<main class="container">
 %s
 <div class="meta-bar">
   <span class="meta-item meta-lang">%s</span>
