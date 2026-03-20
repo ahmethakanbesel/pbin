@@ -74,7 +74,7 @@ body{display:flex;flex-direction:column;min-height:100vh}
 @media(max-width:600px){.container{padding:0 1rem}.form-controls{grid-template-columns:1fr}}
 main.container{flex:1;padding-top:.75rem;padding-bottom:1rem}
 nav{padding:.5rem 0;border-bottom:1px solid var(--pbin-surface-border)}
-nav .nav-inner{display:flex;justify-content:space-between;align-items:center;max-width:720px;margin:0 auto;padding:0 1.25rem}
+nav .nav-inner{display:flex;justify-content:space-between;align-items:center;gap:1.5rem;max-width:720px;margin:0 auto;padding:0 1.25rem}
 @media(min-width:1024px){nav .nav-inner{max-width:800px}}
 nav .brand{display:flex;align-items:center;gap:.4rem;font-size:1.15rem;font-weight:700;text-decoration:none;color:inherit;letter-spacing:-.02em}
 nav .brand-logo{width:22px;height:22px}
