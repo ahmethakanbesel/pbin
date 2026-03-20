@@ -201,9 +201,11 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
     <div class="url-label">Share URL</div>
     <div class="url-row"><code id="share-url"></code><button data-copy="">Copy</button></div>
   </div>
-  <div class="url-group" id="embed-group" style="display:none">
-    <div class="url-label">Embed URL</div>
-    <div class="url-row"><code id="embed-url"></code><button data-copy="">Copy</button></div>
+  <div id="embed-codes" style="display:none">
+    <div class="url-group"><div class="url-label">HTML</div><div class="url-row"><code id="embed-html"></code><button data-copy="">Copy</button></div></div>
+    <div class="url-group"><div class="url-label">BBCode</div><div class="url-row"><code id="embed-bbcode"></code><button data-copy="">Copy</button></div></div>
+    <div class="url-group"><div class="url-label">Markdown</div><div class="url-row"><code id="embed-md"></code><button data-copy="">Copy</button></div></div>
+    <div class="url-group"><div class="url-label">Direct Link</div><div class="url-row"><code id="embed-direct"></code><button data-copy="">Copy</button></div></div>
   </div>
   <div class="url-group">
     <div class="url-label">Delete URL</div>
@@ -320,16 +322,20 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
     } else {
       countEl.style.display = 'none';
     }
-    // Single file image: show embed link
-    var embedGroup = document.getElementById('embed-group');
+    // Single file image: show embed codes
+    var embedCodes = document.getElementById('embed-codes');
     if(!isBucket && data.is_image){
-      var embedEl = document.getElementById('embed-url');
-      var embedURL = data.url + '/info';
-      embedEl.textContent = embedURL;
-      embedEl.nextElementSibling.setAttribute('data-copy', embedURL);
-      embedGroup.style.display = '';
+      var fileURL = data.url;
+      var htmlCode = '<img src="' + fileURL + '" alt="image">';
+      var bbCode = '[img]' + fileURL + '[/img]';
+      var mdCode = '![](' + fileURL + ')';
+      setEmbed('embed-html', htmlCode);
+      setEmbed('embed-bbcode', bbCode);
+      setEmbed('embed-md', mdCode);
+      setEmbed('embed-direct', fileURL);
+      embedCodes.style.display = '';
     } else {
-      embedGroup.style.display = 'none';
+      embedCodes.style.display = 'none';
     }
     document.getElementById('result').classList.remove('hidden');
     initCopyButtons();
@@ -339,6 +345,11 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
     var el = document.getElementById('error-msg');
     el.querySelector('span').textContent = msg;
     el.classList.remove('hidden');
+  }
+  function setEmbed(id, val){
+    var el = document.getElementById(id);
+    el.textContent = val;
+    el.nextElementSibling.setAttribute('data-copy', val);
   }
   function initCopyButtons(){
     document.querySelectorAll('[data-copy]').forEach(function(btn){

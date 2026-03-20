@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"time"
@@ -414,10 +415,10 @@ document.querySelectorAll('[data-copy]').forEach(function(btn){
 		viewNavBarHTML(),
 		infoFilename,
 		slug, infoFilename,
-		htmlEmbed, htmlEmbed,
-		bbcodeEmbed, bbcodeEmbed,
-		markdownEmbed, markdownEmbed,
-		fileURL, fileURL,
+		html.EscapeString(htmlEmbed), html.EscapeString(htmlEmbed),
+		html.EscapeString(bbcodeEmbed), html.EscapeString(bbcodeEmbed),
+		html.EscapeString(markdownEmbed), html.EscapeString(markdownEmbed),
+		html.EscapeString(fileURL), html.EscapeString(fileURL),
 		footerHTML,
 	)
 }

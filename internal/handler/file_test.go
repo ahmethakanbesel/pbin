@@ -414,7 +414,7 @@ func TestInfo_ImageShowsEmbedCodes(t *testing.T) {
 		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
 	body := w.Body.String()
-	for _, want := range []string{"BBCode", "[img]", "Markdown", "Direct Link", "<img src="} {
+	for _, want := range []string{"BBCode", "[img]", "Markdown", "Direct Link", "&lt;img src="} {
 		if !strings.Contains(body, want) {
 			t.Errorf("expected embed code %q in info page, not found", want)
 		}
