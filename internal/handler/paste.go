@@ -147,10 +147,10 @@ func (h *PasteHandler) View(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// CSP: allow highlight.js CDN for script and style, Pico CSS from jsdelivr, inline script/style via nonce.
+	// CSP: highlight.js injects inline styles for syntax coloring — 'unsafe-inline' required for style-src.
 	csp := fmt.Sprintf(
-		"default-src 'none'; script-src 'nonce-%s' https://cdnjs.cloudflare.com; style-src 'nonce-%s' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'none'",
-		nonce, nonce,
+		"default-src 'none'; script-src 'nonce-%s' https://cdnjs.cloudflare.com; style-src 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'none'",
+		nonce,
 	)
 	w.Header().Set("Content-Security-Policy", csp)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -238,7 +238,6 @@ pre code.hljs .line::before{counter-increment:line;content:counter(line);positio
       return '<span class="line">'+hljs.highlight(l,{language:code.className.replace('language-','').replace('hljs ','').split(' ')[0]||'plaintext',ignoreIllegals:true}).value+'</span>';
     }).join('\n');
   }
-  hljs.highlightAll();
   var copyBtn = document.getElementById('copy-btn');
   if(copyBtn){
     copyBtn.addEventListener('click', function(){
