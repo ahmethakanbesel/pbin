@@ -67,51 +67,57 @@ const (
   --pbin-surface: #1e293b;
   --pbin-surface-border: #334155;
 }}
-body{margin:0;padding:0}
-.container{max-width:720px;margin:0 auto;padding:0 1.25rem}
+html,body{margin:0;padding:0;height:100%%}
+body{display:flex;flex-direction:column;min-height:100vh}
+.container{max-width:720px;margin:0 auto;padding:0 1.25rem;width:100%%}
 @media(min-width:1024px){.container{max-width:800px}}
 @media(max-width:600px){.container{padding:0 1rem}.form-controls{grid-template-columns:1fr}}
-nav{padding:.75rem 0;margin-bottom:1.5rem;border-bottom:1px solid var(--pbin-surface-border)}
+main.container{flex:1;padding-top:.75rem;padding-bottom:1rem}
+nav{padding:.5rem 0;border-bottom:1px solid var(--pbin-surface-border)}
 nav .nav-inner{display:flex;justify-content:space-between;align-items:center;max-width:720px;margin:0 auto;padding:0 1.25rem}
 @media(min-width:1024px){nav .nav-inner{max-width:800px}}
-nav .brand{font-size:1.25rem;font-weight:700;text-decoration:none;color:inherit;letter-spacing:-.02em}
+nav .brand{display:flex;align-items:center;gap:.4rem;font-size:1.15rem;font-weight:700;text-decoration:none;color:inherit;letter-spacing:-.02em}
+nav .brand-logo{width:22px;height:22px}
 nav .nav-links{display:flex;gap:.25rem;list-style:none;margin:0;padding:0}
-nav .nav-links a{padding:.4rem .85rem;border-radius:var(--pbin-radius-md);text-decoration:none;font-size:.9rem;font-weight:500;color:var(--pbin-muted);transition:background .15s,color .15s}
+nav .nav-links a{padding:.35rem .75rem;border-radius:var(--pbin-radius-md);text-decoration:none;font-size:.85rem;font-weight:500;color:var(--pbin-muted);transition:background .15s,color .15s}
 nav .nav-links a:hover{background:var(--pbin-surface);color:inherit}
 nav .nav-links a[aria-current="page"]{background:var(--pbin-surface);color:inherit;font-weight:600}
-footer.site-footer{margin-top:3rem;padding:1.5rem 0;border-top:1px solid var(--pbin-surface-border);text-align:center;font-size:.8rem;color:var(--pbin-muted)}
-main.container{padding-top:1rem;padding-bottom:2rem}
-#drop-zone{border:2px dashed var(--pbin-drop-border);border-radius:var(--pbin-radius-lg);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+footer.site-footer{padding:.75rem 0;border-top:1px solid var(--pbin-surface-border);text-align:center;font-size:.75rem;color:var(--pbin-muted)}
+h2{font-size:1.15rem;margin:0 0 .75rem}
+#drop-zone{border:2px dashed var(--pbin-drop-border);border-radius:var(--pbin-radius-lg);padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
 #drop-zone:hover{border-color:var(--pbin-drop-hover-border)}
 #drop-zone.over{border-style:solid;border-color:var(--pbin-drop-hover-border);background:var(--pbin-drop-hover-bg)}
-#drop-zone .drop-icon{display:block;margin:0 auto .75rem;color:var(--pbin-drop-icon)}
-#drop-zone .drop-icon svg{width:48px;height:48px}
-#drop-zone p{margin:0;font-size:.95rem;color:var(--pbin-muted)}
-#drop-zone .drop-hint{font-size:.8rem;color:var(--pbin-muted);margin-top:.35rem}
+#drop-zone .drop-icon{display:block;margin:0 auto .5rem;color:var(--pbin-drop-icon)}
+#drop-zone .drop-icon svg{width:36px;height:36px}
+#drop-zone p{margin:0;font-size:.9rem;color:var(--pbin-muted)}
 #file-list{margin-top:.75rem}
 #file-list .file-item{display:flex;align-items:center;justify-content:space-between;padding:.4rem .75rem;background:var(--pbin-surface);border:1px solid var(--pbin-surface-border);border-radius:var(--pbin-radius-sm);margin-bottom:.35rem;font-size:.85rem}
 #file-list .file-item .file-name{font-weight:500;word-break:break-all}
 #file-list .file-item .file-size{color:var(--pbin-muted);white-space:nowrap;margin-left:.75rem}
 #file-list .file-item .file-remove{background:none;border:none;color:var(--pbin-error-text);cursor:pointer;padding:0 .25rem;font-size:1.1rem;line-height:1}
-.form-controls{display:grid;grid-template-columns:1fr 1fr;gap:0 1.25rem;margin-top:1rem}
-.form-controls label{margin-bottom:0}
+.form-controls{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem;margin-top:.75rem}
+.form-controls label{margin-bottom:0;font-size:.9rem}
 .form-controls .full-width{grid-column:1/-1}
-.result-card{margin-top:1.5rem;padding:1.25rem 1.5rem;background:var(--pbin-success-bg);border:1px solid var(--pbin-success-border);border-radius:var(--pbin-radius-lg)}
-.result-card .result-title{display:flex;align-items:center;gap:.5rem;margin:0 0 1rem;font-size:1rem;color:var(--pbin-success-text);font-weight:600}
-.result-card .result-title svg{width:20px;height:20px;flex-shrink:0}
-.url-group{margin-bottom:.75rem}
+button[type=submit]{margin-top:.5rem}
+.result-card{margin-top:1rem;padding:1rem 1.25rem;background:var(--pbin-success-bg);border:1px solid var(--pbin-success-border);border-radius:var(--pbin-radius-lg)}
+.result-card .result-title{display:flex;align-items:center;gap:.5rem;margin:0 0 .75rem;font-size:.95rem;color:var(--pbin-success-text);font-weight:600}
+.result-card .result-title svg{width:18px;height:18px;flex-shrink:0}
+.url-group{margin-bottom:.5rem}
 .url-group .url-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--pbin-success-text);margin-bottom:.25rem}
 .url-row{display:flex;align-items:center;gap:.5rem}
 .url-row code{flex:1;font-size:.85rem;word-break:break-all;padding:.4rem .6rem;background:rgba(0,0,0,.05);border-radius:var(--pbin-radius-sm);font-family:ui-monospace,monospace}
 @media(prefers-color-scheme:dark){.url-row code{background:rgba(255,255,255,.08)}}
 .url-row button[data-copy]{font-size:.75rem;padding:.3rem .65rem;border-radius:var(--pbin-radius-sm);border:1px solid var(--pbin-success-border);background:transparent;color:var(--pbin-success-text);cursor:pointer;white-space:nowrap;font-weight:500;transition:background .15s}
 .url-row button[data-copy]:hover{background:rgba(0,0,0,.05)}
-.result-card .result-meta{font-size:.85rem;color:var(--pbin-success-text);margin-top:.75rem}
-.error-banner{margin-top:1.5rem;padding:1rem 1.25rem;background:var(--pbin-error-bg);border:1px solid var(--pbin-error-border);border-radius:var(--pbin-radius-lg);color:var(--pbin-error-text);display:flex;align-items:center;justify-content:space-between}
+.result-card .result-meta{font-size:.8rem;color:var(--pbin-success-text);margin-top:.5rem}
+.error-banner{margin-top:1rem;padding:.75rem 1rem;background:var(--pbin-error-bg);border:1px solid var(--pbin-error-border);border-radius:var(--pbin-radius-lg);color:var(--pbin-error-text);display:flex;align-items:center;justify-content:space-between}
 .error-banner .error-dismiss{background:none;border:none;color:var(--pbin-error-text);cursor:pointer;font-size:1.2rem;padding:0 .25rem;line-height:1;opacity:.7}
 .error-banner .error-dismiss:hover{opacity:1}
 .hidden{display:none}
 </style>`
+
+	// pbinLogo is the inline SVG logo — a clipboard/paste icon with a subtle "p" feel.
+	pbinLogo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="brand-logo"><rect x="6" y="4" width="20" height="24" rx="3"/><path d="M12 4V2h8v2"/><path d="M12 14h8M12 18h5"/></svg>`
 
 	// uploadIcon is an inline SVG used in the drop zone.
 	uploadIcon = `<span class="drop-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg></span>`
@@ -132,13 +138,13 @@ func navBarHTML(activePage string) string {
 	}
 	return fmt.Sprintf(`<nav>
   <div class="nav-inner">
-    <a class="brand" href="/">pbin</a>
+    <a class="brand" href="/">%spbin</a>
     <ul class="nav-links">
       <li><a href="/"%s>Upload</a></li>
       <li><a href="/paste"%s>Paste</a></li>
     </ul>
   </div>
-</nav>`, uploadAttr, pasteAttr)
+</nav>`, pbinLogo, uploadAttr, pasteAttr)
 }
 
 // viewNavBarHTML returns the nav bar for view pages (no active page).
@@ -167,12 +173,10 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
 <body>
 %s
 <main class="container">
-<h2>Upload Files</h2>
 <form id="upload-form">
   <div id="drop-zone">
     %s
-    <p>Drag &amp; drop files here, or click to select</p>
-    <p class="drop-hint">One file = shareable link &middot; Multiple files = download bundle</p>
+    <p>Drop files here or click to select</p>
     <input type="file" id="file-input" name="file" multiple style="display:none">
   </div>
   <div id="file-list"></div>
@@ -367,15 +371,14 @@ func (h *UIHandler) Paste(w http.ResponseWriter, r *http.Request) {
 <link rel="stylesheet" href="%s">
 %s
 <style>
-#content{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.9rem;min-height:50vh;resize:vertical}
+#content{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.85rem;resize:vertical}
 </style>
 </head>
 <body>
 %s
 <main class="container">
-<h2>Create a Paste</h2>
 <form id="paste-form">
-  <textarea id="content" name="content" rows="20" required placeholder="Paste your text here..."></textarea>
+  <textarea id="content" name="content" rows="12" required placeholder="Paste your text here..."></textarea>
   <div class="form-controls">
     <label for="title">Title (optional)
       <input type="text" id="title" name="title" placeholder="Untitled">
