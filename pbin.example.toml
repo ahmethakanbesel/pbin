@@ -1,0 +1,25 @@
+# pbin configuration
+# Copy to pbin.toml and adjust as needed.
+# All values below show the defaults — omit any you don't need to change.
+# Environment variables override file values: PBIN_SERVER_PORT=9090
+
+[server]
+port = 8080
+host = "0.0.0.0"
+
+[database]
+path = "./data/pbin.db"
+
+[storage]
+path = "./data/uploads"
+
+[auth]
+# Set enabled = true to require Basic Auth on upload/create endpoints.
+# Read endpoints (download, view, raw) remain public.
+enabled = false
+username = ""
+password = ""
+
+[upload]
+# Maximum upload size in bytes. Default: 104857600 (100 MB)
+max_bytes = 104857600
