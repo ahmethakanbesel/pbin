@@ -1,0 +1,7 @@
+.git
+.interface-design
+data
+*.db
+pbin
+pbin.toml
+coverage.*
