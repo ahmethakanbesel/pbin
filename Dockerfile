@@ -3,18 +3,13 @@ FROM golang:1.25-alpine AS builder
 
 WORKDIR /src
 
-# Cache dependency downloads
-COPY go.mod go.sum ./
-RUN go mod download
-
-# Copy source and build
 COPY . .
 
 ARG VERSION=dev
 ARG COMMIT=unknown
 ARG BUILD_DATE=unknown
 
-RUN CGO_ENABLED=0 go build \
+RUN CGO_ENABLED=0 go build -mod=vendor \
     -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.date=${BUILD_DATE}" \
     -o /pbin ./cmd/pbin
 
