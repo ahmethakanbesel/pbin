@@ -325,7 +325,7 @@ func (h *UIHandler) Home(w http.ResponseWriter, r *http.Request) {
     // Single file image: show embed codes
     var embedCodes = document.getElementById('embed-codes');
     if(!isBucket && data.is_image){
-      var fileURL = data.url;
+      var fileURL = data.download_url;
       var htmlCode = '<img src="' + fileURL + '" alt="image">';
       var bbCode = '[img]' + fileURL + '[/img]';
       var mdCode = '![](' + fileURL + ')';

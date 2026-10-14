@@ -111,6 +111,49 @@ func TestUpload_Success(t *testing.T) {
 	}
 }
 
+func TestUpload_AbsoluteURLs(t *testing.T) {
+	svc := &mockFileService{
+		uploadFn: func(_ context.Context, req file.UploadRequest) (file.UploadResult, error) {
+			return file.UploadResult{Slug: "abc123", URL: "/abc123/info", DeleteURL: "/delete/abc123/secret"}, nil
+		},
+	}
+	tests := []struct {
+		name      string
+		publicURL string
+		proto     string
+		want      string
+	}{
+		{"from request host", "", "", "http://bin.example.com"},
+		{"forwarded proto", "", "https", "https://bin.example.com"},
+		{"public url wins", "https://pbin.example.org/", "http", "https://pbin.example.org"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := handler.WithBaseURL(tt.publicURL, http.HandlerFunc(handler.NewFileHandler(svc, 10*1024*1024).Upload))
+
+			body, ct := buildMultipartForm(t, nil, "test.txt", "hello world")
+			req := httptest.NewRequest(http.MethodPost, "/api/upload", body)
+			req.Host = "bin.example.com"
+			req.Header.Set("Content-Type", ct)
+			if tt.proto != "" {
+				req.Header.Set("X-Forwarded-Proto", tt.proto)
+			}
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, req)
+
+			var resp map[string]any
+			if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+				t.Fatalf("invalid JSON: %v", err)
+			}
+			for key, path := range map[string]string{"url": "/abc123/info", "download_url": "/abc123", "delete_url": "/delete/abc123/secret"} {
+				if got := resp[key]; got != tt.want+path {
+					t.Errorf("%s = %v, want %s", key, got, tt.want+path)
+				}
+			}
+		})
+	}
+}
+
 func TestUpload_MissingFile(t *testing.T) {
 	h := handler.NewFileHandler(&mockFileService{}, 10*1024*1024)
 
@@ -421,8 +464,41 @@ func TestInfo_ImageShowsEmbedCodes(t *testing.T) {
 	}
 }
 
-func TestInfo_NonImageRedirects(t *testing.T) {
-	f := file.File{Slug: "abc123", Filename: "doc.pdf", MimeType: "application/pdf"}
+func TestInfo_NonImageShowsPage(t *testing.T) {
+	f := file.File{Slug: "abc123", Filename: "doc.pdf", MimeType: "application/pdf", Size: 2048}
+	svc := &mockFileService{
+		getMetaFn: func(_ context.Context, slug string) (file.File, error) {
+			return f, nil
+		},
+	}
+	h := handler.NewFileHandler(svc, 10*1024*1024)
+
+	req := httptest.NewRequest(http.MethodGet, "/abc123/info", nil)
+	req.SetPathValue("slug", "abc123")
+	req.Host = "pbin.example.com"
+	req.Header.Set("X-Forwarded-Proto", "https")
+	w := httptest.NewRecorder()
+
+	h.Info(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	body := w.Body.String()
+	for _, want := range []string{"doc.pdf", "2.0 KB", `href="/abc123"`, "Download", "https://pbin.example.com/abc123"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("expected %q in info page, not found", want)
+		}
+	}
+	for _, unwanted := range []string{"BBCode", "preview-img\" src"} {
+		if strings.Contains(body, unwanted) {
+			t.Errorf("unexpected %q in non-image info page", unwanted)
+		}
+	}
+}
+
+func TestInfo_OneUseImageHasNoPreview(t *testing.T) {
+	f := file.File{Slug: "abc123", Filename: "photo.png", MimeType: "image/png", OneUse: true}
 	svc := &mockFileService{
 		getMetaFn: func(_ context.Context, slug string) (file.File, error) {
 			return f, nil
@@ -436,12 +512,8 @@ func TestInfo_NonImageRedirects(t *testing.T) {
 
 	h.Info(w, req)
 
-	if w.Code != http.StatusFound {
-		t.Errorf("expected 302, got %d", w.Code)
-	}
-	loc := w.Header().Get("Location")
-	if loc != "/abc123" {
-		t.Errorf("expected redirect to /abc123, got %q", loc)
+	if strings.Contains(w.Body.String(), `<img class="preview-img"`) {
+		t.Error("one-use image must not be previewed (preview would consume it)")
 	}
 }
 

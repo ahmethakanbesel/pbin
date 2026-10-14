@@ -103,3 +103,20 @@ func TestParseStorageAndDBPathNonEmpty(t *testing.T) {
 		t.Error("DBPath is empty")
 	}
 }
+
+func TestParseEnvKeysWithUnderscores(t *testing.T) {
+	t.Setenv("PBIN_SERVER_PUBLIC_URL", "https://bin.example.com/")
+	t.Setenv("PBIN_UPLOAD_MAX_BYTES", "1024")
+
+	cfg, err := Parse("")
+	if err != nil {
+		t.Fatalf("Parse() returned error: %v", err)
+	}
+
+	if cfg.Server.PublicURL != "https://bin.example.com" {
+		t.Errorf("PublicURL = %q, want %q (trailing slash trimmed)", cfg.Server.PublicURL, "https://bin.example.com")
+	}
+	if cfg.Upload.MaxBytes != 1024 {
+		t.Errorf("MaxBytes = %d, want 1024 (from PBIN_UPLOAD_MAX_BYTES)", cfg.Upload.MaxBytes)
+	}
+}

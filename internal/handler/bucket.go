@@ -130,8 +130,8 @@ func (h *BucketHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := bucketUploadResponse{
-		URL:       result.URL,
-		DeleteURL: result.DeleteURL,
+		URL:       absURL(r, result.URL),
+		DeleteURL: absURL(r, result.DeleteURL),
 		FileCount: result.FileCount,
 		Files:     result.Files,
 	}

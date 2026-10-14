@@ -24,6 +24,9 @@ type Config struct {
 type ServerConfig struct {
 	Port int    // Default: 8080
 	Host string // Default: "0.0.0.0"
+	// PublicURL is the externally visible base URL used in share links,
+	// e.g. "https://pbin.example.com". Empty = derive from each request's Host.
+	PublicURL string
 }
 
 // DatabaseConfig holds database settings.
@@ -64,7 +67,7 @@ func defaults() Config {
 // Missing config file is not an error — defaults are used.
 //
 // Environment variable format: PBIN_SERVER_PORT=9090 maps to server.port
-// (prefix stripped, lowercased, underscores become dots).
+// (prefix stripped, lowercased, first underscore becomes a dot).
 func Parse(configPath string) (Config, error) {
 	cfg := defaults()
 
@@ -81,11 +84,12 @@ func Parse(configPath string) (Config, error) {
 	}
 
 	// Load from environment variables with PBIN_ prefix.
-	// Transform: PBIN_SERVER_PORT -> server.port
+	// Transform: PBIN_SERVER_PORT -> server.port, PBIN_UPLOAD_MAX_BYTES -> upload.max_bytes.
+	// Only the first underscore separates section from key, since keys may contain underscores.
 	if err := k.Load(env.Provider("PBIN_", ".", func(s string) string {
 		s = strings.TrimPrefix(s, "PBIN_")
 		s = strings.ToLower(s)
-		s = strings.ReplaceAll(s, "_", ".")
+		s = strings.Replace(s, "_", ".", 1)
 		return s
 	}), nil); err != nil {
 		return cfg, fmt.Errorf("loading env config: %w", err)
@@ -97,6 +101,9 @@ func Parse(configPath string) (Config, error) {
 	}
 	if k.Exists("server.host") {
 		cfg.Server.Host = k.String("server.host")
+	}
+	if k.Exists("server.public_url") {
+		cfg.Server.PublicURL = strings.TrimRight(k.String("server.public_url"), "/")
 	}
 	if k.Exists("database.path") {
 		cfg.Database.Path = k.String("database.path")

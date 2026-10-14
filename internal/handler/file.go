@@ -10,6 +10,7 @@ import (
 	"html"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ahmethakanbesel/pbin/internal/domain/file"
@@ -58,10 +59,11 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 
 // uploadResponse is the JSON shape returned after a successful upload.
 type uploadResponse struct {
-	URL       string  `json:"url"`
-	DeleteURL string  `json:"delete_url"`
-	ExpiresAt *string `json:"expires_at"` // RFC3339 or null
-	IsImage   bool    `json:"is_image"`
+	URL         string  `json:"url"`          // share page (/{slug}/info)
+	DownloadURL string  `json:"download_url"` // raw file (/{slug}), used for embeds
+	DeleteURL   string  `json:"delete_url"`
+	ExpiresAt   *string `json:"expires_at"` // RFC3339 or null
+	IsImage     bool    `json:"is_image"`
 }
 
 // Upload handles POST /api/upload (multipart form).
@@ -139,9 +141,10 @@ func (h *FileHandler) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := uploadResponse{
-		URL:       result.URL,
-		DeleteURL: result.DeleteURL,
-		IsImage:   result.IsImage,
+		URL:         absURL(r, result.URL),
+		DownloadURL: absURL(r, "/"+result.Slug),
+		DeleteURL:   absURL(r, result.DeleteURL),
+		IsImage:     result.IsImage,
 	}
 	if result.ExpiresAt != nil {
 		s := result.ExpiresAt.UTC().Format(time.RFC3339)
@@ -319,8 +322,8 @@ func validateImageMagic(mimeType string, peek []byte) bool {
 	return false
 }
 
-// Info handles GET /{slug}/info — renders an HTML share page with embed codes for image files.
-// For non-image files it redirects to /{slug} for direct download.
+// Info handles GET /{slug}/info — renders an HTML share page for any file: metadata, a
+// download button and copyable links, plus a preview and embed codes for images.
 func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
 	securityHeaders(w)
 
@@ -343,28 +346,55 @@ func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Non-image files: redirect to direct download.
-	if !file.IsImage(f.MimeType) {
-		http.Redirect(w, r, "/"+slug, http.StatusFound)
-		return
-	}
-
-	// Build the shareable URL for embed codes.
-	// The handler derives the absolute URL from the request (scheme + host).
-	scheme := "https"
-	if r.TLS == nil {
-		scheme = "http"
-	}
-	baseURL := scheme + "://" + r.Host
-	fileURL := baseURL + "/" + slug
 	infoFilename := f.Filename
 	if infoFilename == "" {
 		infoFilename = slug
 	}
+	isImage := file.IsImage(f.MimeType)
+	protected := f.PasswordHash != ""
+	fileURL := baseURL(r) + "/" + slug
 
-	htmlEmbed := fmt.Sprintf(`<img src="%s" alt="%s">`, fileURL, infoFilename)
-	bbcodeEmbed := fmt.Sprintf(`[img]%s[/img]`, fileURL)
-	markdownEmbed := fmt.Sprintf(`![%s](%s)`, infoFilename, fileURL)
+	// Inline preview fetches /{slug}, which would consume a one-use file
+	// and cannot pass a password, so only preview unrestricted images.
+	preview := ""
+	if isImage && !protected && !f.OneUse {
+		preview = fmt.Sprintf(`<img class="preview-img" src="/%s" alt="%s">`, slug, html.EscapeString(infoFilename))
+	}
+
+	mimeType := f.MimeType
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
+	}
+	meta := []string{humanSize(f.Size), html.EscapeString(mimeType)}
+	if f.ExpiresAt != nil {
+		meta = append(meta, "Expires "+f.ExpiresAt.UTC().Format("2006-01-02 15:04 UTC"))
+	} else {
+		meta = append(meta, "Never expires")
+	}
+	if protected {
+		meta = append(meta, "Password protected")
+	}
+	if f.OneUse {
+		meta = append(meta, "Can be downloaded only once")
+	}
+	metaHTML := `<span>` + strings.Join(meta, `</span><span class="meta-sep"></span><span>`) + `</span>`
+
+	embedRow := func(label, value string) string {
+		v := html.EscapeString(value)
+		return fmt.Sprintf(`<div class="embed-group"><div class="embed-label">%s</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>`, label, v, v)
+	}
+	links := embedRow("Share Page", fileURL+"/info") + embedRow("Direct Link", fileURL)
+	if isImage {
+		links += embedRow("HTML", fmt.Sprintf(`<img src="%s" alt="%s">`, fileURL, infoFilename)) +
+			embedRow("BBCode", fmt.Sprintf(`[img]%s[/img]`, fileURL)) +
+			embedRow("Markdown", fmt.Sprintf(`![%s](%s)`, infoFilename, fileURL))
+	}
+
+	// Images open inline; everything else is served as an attachment by /{slug}.
+	downloadAttr := ""
+	if !isImage {
+		downloadAttr = fmt.Sprintf(` download="%s"`, html.EscapeString(infoFilename))
+	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'unsafe-inline'")
@@ -378,6 +408,11 @@ func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
 %s
 <style>
 .preview-img{max-width:100%%;border:1px solid var(--pbin-surface-border);border-radius:var(--pbin-radius-lg);margin-bottom:1.5rem}
+.file-title{word-break:break-all}
+.file-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;padding:.6rem 1rem;background:var(--pbin-surface);border:1px solid var(--pbin-surface-border);border-radius:var(--pbin-radius-md);font-size:.85rem;color:var(--pbin-muted);margin-bottom:1.5rem}
+.file-meta .meta-sep{width:1px;height:1rem;background:var(--pbin-surface-border)}
+.btn-download{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.5rem;border-radius:var(--pbin-radius-md);font-size:.95rem;font-weight:500;text-decoration:none;margin-bottom:2rem}
+.btn-download svg{width:18px;height:18px}
 .embed-group{margin-bottom:1rem}
 .embed-group .embed-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--pbin-muted);margin-bottom:.35rem}
 .embed-group .embed-row{display:flex;align-items:center;gap:.5rem}
@@ -389,48 +424,29 @@ func (h *FileHandler) Info(w http.ResponseWriter, r *http.Request) {
 <body>
 %s
 <main class="container">
-<h2>%s</h2>
-<img class="preview-img" src="/%s" alt="%s">
-<div class="embed-group"><div class="embed-label">HTML</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>
-<div class="embed-group"><div class="embed-label">BBCode</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>
-<div class="embed-group"><div class="embed-label">Markdown</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>
-<div class="embed-group"><div class="embed-label">Direct Link</div><div class="embed-row"><code>%s</code><button data-copy="%s">Copy</button></div></div>
+<h2 class="file-title">%s</h2>
+%s
+<div class="file-meta">%s</div>
+<a href="/%s" class="btn-download contrast" role="button"%s><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>Download</a>
+%s
 </main>
 %s
 <script>
-function copyText(text){
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).catch(function(){fallbackCopy(text);});
-  } else {fallbackCopy(text);}
-}
-function fallbackCopy(text){
-  var ta=document.createElement('textarea');
-  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-  document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');}catch(e){}
-  document.body.removeChild(ta);
-}
-document.querySelectorAll('[data-copy]').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    copyText(btn.getAttribute('data-copy'));
-    var orig = btn.textContent;
-    btn.textContent = 'Copied!';
-    setTimeout(function(){ btn.textContent = orig; }, 1500);
-  });
-});
+%s
+initCopyButtons();
 </script>
 </body>
 </html>`,
-		infoFilename,
+		html.EscapeString(infoFilename),
 		picoCSS,
 		customCSS,
 		viewNavBarHTML(),
-		infoFilename,
-		slug, infoFilename,
-		html.EscapeString(htmlEmbed), html.EscapeString(htmlEmbed),
-		html.EscapeString(bbcodeEmbed), html.EscapeString(bbcodeEmbed),
-		html.EscapeString(markdownEmbed), html.EscapeString(markdownEmbed),
-		html.EscapeString(fileURL), html.EscapeString(fileURL),
+		html.EscapeString(infoFilename),
+		preview,
+		metaHTML,
+		slug, downloadAttr,
+		links,
 		footerHTML,
+		sharedJS,
 	)
 }

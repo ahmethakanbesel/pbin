@@ -81,8 +81,8 @@ func (h *PasteHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := pasteCreateResponse{
-		URL:       result.URL,
-		DeleteURL: result.DeleteURL,
+		URL:       absURL(r, result.URL),
+		DeleteURL: absURL(r, result.DeleteURL),
 	}
 	if result.ExpiresAt != nil {
 		s := result.ExpiresAt.UTC().Format(time.RFC3339)

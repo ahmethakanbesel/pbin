@@ -24,7 +24,8 @@ type Service struct {
 }
 
 // NewService constructs a Service with the given repository and base URL.
-// baseURL must not have a trailing slash (e.g., "https://pbin.example.com").
+// baseURL is prepended to returned URLs and must not have a trailing slash
+// (e.g., "https://pbin.example.com"); pass "" for root-relative URLs.
 func NewService(repo Repository, baseURL string) *Service {
 	return &Service{repo: repo, baseURL: baseURL}
 }

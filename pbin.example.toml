@@ -6,6 +6,9 @@
 [server]
 port = 8080
 host = "0.0.0.0"
+# Public base URL used in share/delete links (env: PBIN_SERVER_PUBLIC_URL).
+# When empty, links use the request's Host and X-Forwarded-Proto headers.
+public_url = ""
 
 [database]
 path = "./data/pbin.db"

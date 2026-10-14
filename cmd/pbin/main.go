@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -68,8 +67,9 @@ func main() {
 	}
 	slog.Info("file store ready", "path", cfg.Storage.Path)
 
-	// Build base URL from config (used in shareable URLs returned to uploaders).
-	baseURL := "http://" + cfg.Server.Host + ":" + strconv.Itoa(cfg.Server.Port)
+	// Services return root-relative URLs; handlers make them absolute using
+	// server.public_url, or the request's host when it is not set (see handler.WithBaseURL).
+	baseURL := ""
 
 	fileRepo := storage.NewFileRepo(db)
 	fileSvc := file.NewService(fileRepo, fs, baseURL)
@@ -212,7 +212,7 @@ func main() {
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	srv := &http.Server{
 		Addr:         addr,
-		Handler:      mux,
+		Handler:      handler.WithBaseURL(cfg.Server.PublicURL, mux),
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  120 * time.Second,
